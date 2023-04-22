@@ -59,13 +59,13 @@ constraint forall(i in 1..m)(
 );
 
 
-% Uncomment if couriers cannot go back to base before taking other packages
+% Comment if couriers can go back to base before taking other packages
 constraint forall(i in 1..m)(
     forall(j in 2..n+1)((c[i,j] == n+1) -> not exists(k in j..n+1)(c[i,k] != n+1))
 );
 
 
-% Summetry breaking 
+% Symmetry breaking 
 
 
 % If two couriers have the same capacity then they are symmetric,
@@ -95,12 +95,4 @@ z = max(i in 1..m)(distances[i]);
   
 
 solve minimize z;
-
-output [
-  "c = \(c[1, ..])",
-  "c = \(c[2, ..])",
-  "c = \(c[3, ..])",
-  "distances = \(distances)",
-  "z = \(z)",
-];
 
