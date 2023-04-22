@@ -4,11 +4,15 @@ from model_runner import cmd_runner as get_stats
 import matplotlib.pyplot as plt
 
 
-ORDERS = 3
-INSTANCES_PER_ORDER = 5
-MODELS = ["../model.mzn"]
+ORDERS = 5
+INSTANCES_PER_ORDER = 2
+MODELS = ["../model.mzn", 
+          "../dom_deg_min.mzn", 
+          "../dom_deg_rand.mzn"]
 
-model_to_name = {MODELS[0]: "Default Model"}
+model_to_name = {MODELS[0]: "Default Model", 
+                 MODELS[1]: "Dom_w_deg, Indomain_min",
+                 MODELS[2]: "Dom_w_deg, Indomain_rand"}
 
 FONTSIZE  = 14
 plt.rc("font", weight = "bold", size= FONTSIZE)

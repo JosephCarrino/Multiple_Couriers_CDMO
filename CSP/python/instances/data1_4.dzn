@@ -1,15 +1,16 @@
-m = 5; % number of couriers
-n = 6; % number of packages
+m = 4; % number of couriers
+n = 7; % number of packages
 
-l = [10, 7, 5, 7, 7]; % maximum carriable weight per courier
-s = [2, 3, 3, 4, 5, 5]; % weight of each package
+l = [11, 6, 10, 10]; % maximum carriable weight per courier
+s = [6, 6, 6, 5, 3, 3, 4]; % weight of each package
 
 D = % distance matrix 
-	 [| 2, 4, 5, 5, 3, 5, 5
-	 | 4, 7, 7, 4, 6, 5, 3
-	 | 5, 7, 4, 5, 8, 4, 2
-	 | 5, 4, 5, 3, 8, 3, 8
-	 | 3, 6, 8, 8, 7, 2, 7
-	 | 5, 5, 4, 3, 2, 3, 7
-	 | 7, 6, 8, 5, 4, 8, 5
+	 [| 2, 5, 7, 4, 5, 4, 5, 4
+	 | 5, 8, 6, 6, 8, 8, 8, 4
+	 | 7, 6, 7, 6, 2, 7, 4, 5
+	 | 4, 6, 6, 3, 6, 2, 5, 5
+	 | 5, 8, 2, 6, 6, 4, 5, 8
+	 | 4, 8, 7, 2, 4, 5, 6, 5
+	 | 5, 8, 4, 5, 5, 6, 6, 8
+	 | 8, 5, 5, 7, 3, 5, 7, 3
 	 |];

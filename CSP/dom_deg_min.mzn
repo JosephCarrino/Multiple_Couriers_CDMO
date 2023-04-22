@@ -94,5 +94,5 @@ z = max(i in 1..m)(distances[i]);
   
   
 
-solve minimize z;
+solve :: int_search(c, dom_w_deg, indomain_min)  minimize z;
 
