@@ -1,0 +1,13 @@
+m = 3; % number of couriers
+n = 4; % number of packages
+
+l = [3, 4, 5]; % maximum carriable weight per courier
+s = [3, 3, 3, 1]; % weight of each package
+
+D = % distance matrix 
+	 [| 2, 4, 3, 3, 4
+	 | 2, 4, 1, 1, 4
+	 | 3, 2, 3, 2, 4
+	 | 4, 4, 3, 1, 4
+	 | 4, 2, 1, 4, 2
+	 |];

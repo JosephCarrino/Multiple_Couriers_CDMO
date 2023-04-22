@@ -18,11 +18,16 @@ def main():
 def multi_generator(instances = INSTANCES, increasingly = False):
     for i in range(instances):
         if increasingly:
-            generator(i, i+1)
+            generator(i, i+1, f"instances/data{i}.dzn")
         else:
             generator(i, 1)
 
-def generator(instance, factor):
+def multi_mixed_generator(orders = 5, instances_per_order = INSTANCES):
+    for i in range(orders):
+        for j in range(instances_per_order):
+            generator(i, i+1, f"instances/data{i}_{j}.dzn")
+
+def generator(instance, factor, out_name):
     random.seed()
     sum_pack_weights = float("inf")
     sum_courier_weights = 0
@@ -46,7 +51,7 @@ def generator(instance, factor):
         distances = [[random.randint(MIN_DISTANCE*factor, DISTANCE_BOUND*factor) for _ in range(n_packages+1)] for _ in range(n_packages+1)]
     
     # write to file
-    with open(f"instances/data{instance}.dzn", "w") as f:
+    with open(out_name, "w") as f:
         f.write(f"m = {n_couriers}; % number of couriers\n")
         f.write(f"n = {n_packages}; % number of packages\n\n")
         f.write(f"l = {couriers_weights}; % maximum carriable weight per courier\n")
