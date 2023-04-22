@@ -51,9 +51,9 @@ constraint forall(i in 1..m)(
 );
 
 % Uncomment if couriers cannot go back to base before taking other packages
-%constraint forall(i in 1..m)(
-%    forall(j in 2..n+1)((c[i,j] == n+1) -> not exists(k in j..n+1)(c[i,k] != n+1))
-%);
+constraint forall(i in 1..m)(
+    forall(j in 2..n+1)((c[i,j] == n+1) -> not exists(k in j..n+1)(c[i,k] != n+1))
+);
   
   
 
@@ -65,10 +65,4 @@ z = max(i in 1..m)(sum(j in 1..n+1)(D[c[i,j], c[i,j+1]]));
   
 
 solve minimize z;
-
-output [
-  "c = \(c[1, ..])",
-  "c = \(c[2, ..])",
-  "c = \(c[3, ..])",
-];
 
