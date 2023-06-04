@@ -26,15 +26,19 @@ def runner(model_path=MODEL_PATH, data_path=DATA_PATH):
     paths = get_paths(moves)
     return paths, result["z"], end-start
 
-def cmd_runner(model=MODEL_PATH, data_path = DATA_PATH):
+def cmd_runner(model=MODEL_PATH, data_path = DATA_PATH, to_ret_1 = None, to_ret_2 = None, to_ret_3 = None):
     solver = "Gecode"
     start = time.time()
-    result = os.popen(f"minizinc --solver {solver} {model} {data_path}").read()
+    result = os.popen(f"minizinc -p 8 --solver {solver} {model} {data_path}").read()
     if result != "" and result[0] != "c":
         return [], 0 , 0
     end = time.time()
     # paths, dist = out_formatter(result)
     paths, dist = default_out_formatter(result)
+    if to_ret_1 != None:
+        to_ret_1.put(paths)
+        to_ret_2.put(dist)
+        to_ret_3.put(end-start)
     return paths, dist, end-start
 
 def default_out_formatter(result):
