@@ -168,7 +168,7 @@ def solve_one(instances, idx, to_ret1 = None, to_ret2 = None, to_ret3 = None, to
   
 def main():
     instances = get_file()
-    solve_one(instances, 0)
+    solve_one(instances, 1)
 
 if __name__ == "__main__":
     main()
