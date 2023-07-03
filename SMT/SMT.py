@@ -7,76 +7,108 @@ from converter import get_file
 
 MAXITER = 50
 
+
 def array_max(vs):
     m = vs[0]
     for v in vs[1:]:
         m = If(v > m, v, m)
     return m
+
+
+def lex_less(a, b):
+    if not a:
+        return True
+    if not b:
+        return False
+    return Or(a[0] <= b[0], And(a[0] == b[0], lex_less(a[1:], b[1:])))
+
+
+def convert_to_integer(y, time_range, courier_range, package_range):
+    res = [[0 for _ in time_range] for _ in courier_range]
+
+    for courier in courier_range:
+        for _time in time_range:
+            res[courier][_time] = Sum([package * y[package][_time][courier] for package in package_range])
+    return res
+
+
+def lex_less_single(a, b):
+    if not a or not b:
+        return True
+
+    return Or(a[0] <= b[0], And(a[0] == b[0], lex_less_single(a[1:], b[1:])))
+
+
+def lex_less_no_conversion(a, b):
+    if not a:
+        return True
+    if not b:
+        return False
+    return Or(lex_less_single(a[0], b[0]), And(a[0] == b[0], lex_less_no_conversion(a[1:], b[1:])))
+
+
 def multiple_couriers(m, n, D, l, s):
     solver = Solver()
+    upper_bound, lower_bound = calculate_bound_package(m, n, D, l, s)
 
     # So that the package representing the base doens't count in the weight calculation
     s += [0]
 
     # Ranges
-    package_range = range(n+1)
-    time_range = range(n+2)
-    time_range_no_zero = range(1, time_range[-1])
+    package_range = range(n + 1)
+    time_range = range(n + 2)
+    time_range_no_zero = range(1, time_range[-1] + 1)
     courier_range = range(m)
 
     # Constant
     base_package = n
     last_time = n + 1
-    coords = list(itertools.product(courier_range, time_range))
 
     # Variables
     # y[p][t][c] == 1 se c porta p al tempo t
-    y = [[[Int( f"y_{package}_{_time}_{courier}")
-          for courier in courier_range]
+    y = [[[Int(f"y_{package}_{_time}_{courier}")
+           for courier in courier_range]
           for _time in time_range]
-          for package in package_range]
+         for package in package_range]
 
     # Binary constraint
     # Value range of decision variable
     for package in package_range:
-      for courier in courier_range:
-        for _time in time_range:
-          solver.add(y[package][_time][courier] <= 1)
-          solver.add(y[package][_time][courier] >= 0)
-
+        for courier in courier_range:
+            for _time in time_range:
+                solver.add(y[package][_time][courier] <= 1)
+                solver.add(y[package][_time][courier] >= 0)
 
     # weights vector, weights[c] is the amount transported by c
     weights = []
     for courier in courier_range:
-      weights.append(
-          Sum([s[package] * y[package][_time][courier] for _time in time_range for package in package_range])
-      )
+        weights.append(
+            Sum([s[package] * y[package][_time][courier] for _time in time_range for package in package_range])
+        )
 
     # distances vector, distances[c] is the amount travelled by c
     distances = []
     for courier in courier_range:
-      courier_distances = []
-      for _time in time_range_no_zero:
-        for p1 in package_range:
-          for p2 in package_range:
-            a = y[p1][_time - 1][courier] == 1
-            b = y[p2][_time][courier] == 1
-            courier_distances.append(D[p1][p2] * And(a, b))
+        courier_distances = []
+        for _time in time_range_no_zero:
+            for p1 in package_range:
+                for p2 in package_range:
+                    a = y[p1][_time - 1][courier] == 1
+                    b = y[p2][_time][courier] == 1
+                    courier_distances.append(D[p1][p2] * And(a, b))
 
-      distances.append(Sum(courier_distances))
+        distances.append(Sum(courier_distances))
 
-
-    # Each package taken one _time only
+    # Each package taken one time only
     for package in package_range:
-      if package == base_package:
-        continue
-      solver.add(Sum([y[package][_time][courier] for _time in time_range for courier in courier_range]) == 1)
+        if package == base_package:
+            continue
+        solver.add(Sum([y[package][_time][courier] for _time in time_range for courier in courier_range]) == 1)
 
     # A courier carry only one package at _time
     for courier in courier_range:
-      for _time in time_range:
-        solver.add(Sum([y[package][_time][courier] for package in package_range]) == 1)
-
+        for _time in time_range:
+            solver.add(Sum([y[package][_time][courier] for package in package_range]) == 1)
 
     # Every carried package must be delivered to destination and every courier must start from destination
     for courier in courier_range:
@@ -87,40 +119,50 @@ def multiple_couriers(m, n, D, l, s):
     for courier in courier_range:
         solver.add(weights[courier] <= l[courier])
 
-    #Couriers must immediately start with a package after the base
+    # Couriers must immediately start with a package after the base
     for courier in courier_range:
-      for _time in time_range_no_zero:
-        a = y[base_package][_time][courier]
-        b = y[base_package][1][courier]
+        for _time in time_range_no_zero:
+            a = y[base_package][_time][courier]
+            b = y[base_package][1][courier]
 
-        solver.add(Implies(a != 1, b != 1))
+            solver.add(Implies(a != 1, b != 1))
 
-    #Couriers cannot go back to the base before taking other packages
+    # Couriers cannot go back to the base before taking other packages
     for courier in courier_range:
-      for _time in time_range_no_zero:
-        a = y[base_package][_time][courier]
+        for _time in time_range_no_zero:
+            a = y[base_package][_time][courier]
 
-        for _time2 in range(_time + 1, last_time):
-          b = y[base_package][_time2][courier]
-          solver.add(Implies(a == 1, b == 1))
+            for _time2 in range(_time + 1, last_time):
+                b = y[base_package][_time2][courier]
+                solver.add(Implies(a == 1, b == 1))
+
+    # Symmetry breaking constraints
+    # integer_matrix = convert_to_integer(y, time_range, courier_range, package_range)
+
+    # If two couriers have the same capacity then they are symmetric, we impose an order between them
+    # for c1 in courier_range:
+    #     for c2 in courier_range:
+    #         if c1 < c2 and l[c1] == l[c2]:
+    #             solver.add(lex_less_no_conversion(integer_matrix[c1], integer_matrix[c2]))
+    #
+    # # Two couriers path are exchangeable if the maximum weight of the two is less than the minimum loading capacity
+    # for c1 in courier_range:
+    #     for c2 in courier_range:
+    #         if c1 < c2:
+    #             max_weight = If(weights[c1] > weights[c2], weights[c1], weights[c2])
+    #             min_capacity = If(l[c1] < l[c2], l[c1], l[c2])
+    #             condition = max_weight <= min_capacity
+    #
+    #             solver.add(Implies(condition, lex_less_no_conversion(y[c1], integer_matrix[c2])))
 
     # Heuristic (?)
-    delta = calculate_delta(m, n, D, l, s)
-    max_package = min(n, math.ceil(n / m) + delta)
-    min_package = max(0, math.floor(n / m) - delta)
-
-    print(f"{delta=}, {max_package=}, {min_package=}")
-
     for courier in courier_range:
-      package_transported = Sum([
-          y[package][_time][courier] for _time in time_range for package in package_range if package != base_package
-      ])
+        package_transported = Sum([
+            y[package][_time][courier] for _time in time_range for package in package_range if package != base_package
+        ])
 
-      solver.add(package_transported <= max_package)
-      solver.add(package_transported >= min_package)
-
-
-
+        solver.add(package_transported <= upper_bound)
+        solver.add(package_transported >= lower_bound)
 
     # Getting maximum distance
     objective_value = array_max(distances)
@@ -131,23 +173,31 @@ def multiple_couriers(m, n, D, l, s):
             if D[i][j] <= min_distance and D[i][j] != 0:
                 min_distance = D[i][j]
 
-
     max_distance = 0
     for i in range(len(D)):
         max_distance += max(D[i])
 
     print(f"{max_distance=}, {min_distance=}")
-    max_distance = max_distance / max_package
-    min_distance = max(min_distance, min_distance * min_package)
+    max_distance = math.ceil(max_distance)  # / upper_bound)
+    min_distance = max(min_distance, math.floor(min_distance))  # * lower_bound))
     print(f"{max_distance=}, {min_distance=}")
+
+    for a in solver.assertions():
+        # print(a)
+        pass
+
+    print(f"constraint number: {len(solver.assertions())}")
 
     start_time = time()
     iter = 1
     last_sol = None
     while iter < MAXITER:
-        k = int((min_distance + max_distance) / 2)
 
-        print(f"current k={k}")
+        weight = 0.5  # + (0.2 * math.exp(-0.2 * iter))
+
+        k = int(((1 - weight) * min_distance + weight * max_distance))
+
+        print(f"current k={k}, {weight=}")
 
         solver.push()
         solver.add(objective_value <= k)
@@ -158,8 +208,20 @@ def multiple_couriers(m, n, D, l, s):
             min_distance = k
         else:
             max_distance = k
-            last_sol = sol
+            last_sol = solver.model()
 
+        if sol == sat:
+            g = last_sol
+            print("SMT SOLUTION: \n__________________\n")
+            for courier in courier_range:
+                t = ""
+                for _time in time_range:
+                    value = sum(package * g.eval(y[package][_time][courier]) for package in package_range)
+                    t += f"{g.eval(value + 1)}, "
+
+                print(t)
+
+            print("\n__________________\n")
 
         if abs(min_distance - max_distance) <= 1:
             return max_distance, last_sol, f"{time() - start_time:.2f}", iter
@@ -167,17 +229,12 @@ def multiple_couriers(m, n, D, l, s):
         iter += 1
         solver.pop()
 
-
     return max_distance, "Out of _time", f"{time() - start_time:.2f}", iter
 
 
-
-def calculate_delta(m, n, D, l, s):
+def calculate_bound_package(m, n, D, l, s):
     weight_sum = sum(s)
     capacity_min = min(l)
-
-    if capacity_min >= weight_sum:
-        return 0
 
     capacity_max = max(l)
     weight_max = max(s)
@@ -185,14 +242,27 @@ def calculate_delta(m, n, D, l, s):
     max_package = capacity_max // weight_max
     min_package = capacity_min // weight_max
 
+    upper_bound = min(n, math.ceil(n / m))
+    lower_bound = max(0, math.floor(n / m))
+
+    if capacity_min >= weight_sum:
+        delta = 0
+    else:
+        delta = max_package - min_package
+
+    upper_bound = min(n, upper_bound + delta)
+    lower_bound = max(0, lower_bound - delta)
+    print(f"{delta=}, {upper_bound=}, {lower_bound=}")
+
+    return upper_bound, lower_bound
 
 
-
-    return max_package - min_package    #delta
-
-def solve_one(instances, idx, to_ret1 = None, to_ret2 = None, to_ret3 = None, to_ret4 = None):
+def solve_one(instances, idx, to_ret1=None, to_ret2=None, to_ret3=None, to_ret4=None):
     print(instances[idx])
-    mindist, sol, time_passed, iter = multiple_couriers(*instances[idx].values())
+    m, n, D, l, s = instances[idx]['m'], instances[idx]['n'], instances[idx]['D'], instances[idx]['l'], instances[idx][
+        's']
+
+    mindist, sol, time_passed, iter = multiple_couriers(m, n, D, l, s)  # *instances[idx].values()) 27
 
     if to_ret1 != None:
         to_ret1.put(sol)
@@ -201,11 +271,13 @@ def solve_one(instances, idx, to_ret1 = None, to_ret2 = None, to_ret3 = None, to
         to_ret4.put(iter)
     return sol, mindist, time_passed, iter
 
+
 def main():
     instances = get_file()
-    _, mindist, t, _ = solve_one(instances, 3)
+    _, mindist, t, _ = solve_one(instances, 5)
     print(f"Min distance {mindist}")
     print(f"Time passed {t}s")
+
 
 if __name__ == "__main__":
     main()
