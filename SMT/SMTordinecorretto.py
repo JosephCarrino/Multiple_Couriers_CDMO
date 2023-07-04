@@ -4,6 +4,7 @@ from z3 import *
 import itertools
 from time import time
 from converter import get_file
+import numpy as np
 
 MAXITER = 50
 
@@ -74,7 +75,7 @@ def multiple_couriers(m, n, D, l, s):
           for package in package_range]
          for courier in courier_range]
 
-    print(y)
+    # print(y)
 
     # Binary constraint
     # Value range of decision variable
@@ -185,16 +186,12 @@ def multiple_couriers(m, n, D, l, s):
     for i in range(len(D)):
         max_distance += max(D[i])
 
-    print(f"{max_distance=}, {min_distance=}")
+    # print(f"{max_distance=}, {min_distance=}")
     max_distance = math.ceil(max_distance)  # / upper_bound)
     min_distance = max(min_distance, math.floor(min_distance))  # * lower_bound))
-    print(f"{max_distance=}, {min_distance=}")
+    # print(f"{max_distance=}, {min_distance=}")
 
-    for a in solver.assertions():
-        # print(a)
-        pass
-
-    print(f"constraint number: {len(solver.assertions())}")
+    # print(f"constraint number: {len(solver.assertions())}")
 
 
     start_time = time()
@@ -206,7 +203,7 @@ def multiple_couriers(m, n, D, l, s):
 
         k = int(((1 - weight) * min_distance + weight * max_distance))
 
-        print(f"current k={k}, {weight=}")
+        # print(f"current k={k}, {weight=}")
 
         solver.push()
         solver.add(objective_value <= k)
@@ -219,32 +216,30 @@ def multiple_couriers(m, n, D, l, s):
             max_distance = k
             last_sol = solver.model()
 
+        to_ret = [[0 for _ in range(last_time + 1)] for _ in range(len(courier_range))]
+
         if sol == sat:
             g = last_sol
-            print("SMT SOLUTION: \n__________________\n")
             for courier in courier_range:
                 t = ""
                 for _time in time_range:
                     value = sum(package * g.eval(y[courier][package][_time]) for package in package_range)
                     t += f"{g.eval(value + 1)}, "
+                    to_ret[courier][ _time] = g.eval(value + 1).as_long()
 
-                print(t)
-
-            print("\n__________________\n")
 
         if abs(min_distance - max_distance) <= 1:
             g = last_sol
-            print("SMT SOLUTION: \n__________________\n")
+            # print("SMT SOLUTION: \n__________________\n")
             for courier in courier_range:
                 t = ""
                 for _time in time_range:
                     value = sum(package * g.eval(y[courier][package][_time]) for package in package_range)
                     t += f"{g.eval(value + 1)}, "
+                    to_ret[courier][ _time] = g.eval(value + 1).as_long()
+                
 
-                print(t)
-
-            print("\n__________________\n")
-            return max_distance, last_sol, f"{time() - start_time:.2f}", iter
+            return max_distance, to_ret, f"{time() - start_time:.2f}", iter
 
         iter += 1
         solver.pop()
@@ -272,21 +267,20 @@ def calculate_bound_package(m, n, D, l, s):
 
     upper_bound = min(n, upper_bound + delta)
     lower_bound = max(0, lower_bound - delta)
-    print(f"{delta=}, {upper_bound=}, {lower_bound=}")
+    # print(f"{delta=}, {upper_bound=}, {lower_bound=}")
 
     return upper_bound, lower_bound
 
 
 def solve_one(instances, idx, to_ret1=None, to_ret2=None, to_ret3=None, to_ret4=None):
-    print(instances[idx])
+    # print(instances[idx])
     m, n, D, l, s = instances[idx]['m'], instances[idx]['n'], instances[idx]['D'], instances[idx]['l'], instances[idx][
         's']
 
     mindist, sol, time_passed, iter = multiple_couriers(m, n, D, l, s)  # *instances[idx].values()) 27
-
     if to_ret1 != None:
-        to_ret1.put(sol)
-        to_ret2.put(mindist)
+        to_ret1.put(mindist)
+        to_ret2.put(sol)
         to_ret3.put(time_passed)
         to_ret4.put(iter)
     return sol, mindist, time_passed, iter
@@ -294,9 +288,9 @@ def solve_one(instances, idx, to_ret1=None, to_ret2=None, to_ret3=None, to_ret4=
 
 def main():
     instances = get_file()
-    _, mindist, t, _ = solve_one(instances, 3)
-    print(f"Min distance {mindist}")
-    print(f"Time passed {t}s")
+    _, mindist, t, _ = solve_one(instances, 0)
+    # print(f"Min distance {mindist}")
+    # print(f"Time passed {t}s")
 
 
 if __name__ == "__main__":
