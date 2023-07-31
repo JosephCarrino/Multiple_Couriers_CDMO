@@ -47,7 +47,7 @@ def lex_less_no_conversion(a, b):
     return Or(lex_less_single(a[0], b[0]), And(a[0] == b[0], lex_less_no_conversion(a[1:], b[1:])))
 
 
-def multiple_couriers(m, n, D, l, s):
+def multiple_couriers(m, n, D, l, s, to_ret1, to_ret2, to_ret3, to_ret4):
     solver = Solver()
     upper_bound, lower_bound = calculate_bound_package(m, n, D, l, s)
 
@@ -210,6 +210,10 @@ def multiple_couriers(m, n, D, l, s):
             max_distance = k
             last_sol = solver.model()
 
+        to_ret = [[0 for _ in range(last_time + 1)] for _ in range(len(courier_range))]
+
+        print(f"ITERATION: {iter} - TIME: {time() - start_time} - STATUS: {sol} - DISTANCE: {k}")
+
         if sol == sat:
             g = last_sol
             print("SMT SOLUTION: \n__________________\n")
@@ -218,13 +222,28 @@ def multiple_couriers(m, n, D, l, s):
                 for _time in time_range:
                     value = sum(package * g.eval(y[package][_time][courier]) for package in package_range)
                     t += f"{g.eval(value + 1)}, "
-
+                    to_ret[courier][ _time] = g.eval(value + 1).as_long()
                 print(t)
-
             print("\n__________________\n")
+            if to_ret1 != None:
+                to_ret1.put(k)
+                to_ret2.put(to_ret)
+                to_ret3.put(f"{time() - start_time:.2f}")
+                to_ret4.put(iter)
 
         if abs(min_distance - max_distance) <= 1:
-            return max_distance, last_sol, f"{time() - start_time:.2f}", iter
+            g = last_sol
+            print("SMT SOLUTION: \n__________________\n")
+            for courier in courier_range:
+                t = ""
+                for _time in time_range:
+                    value = sum(package * g.eval(y[package][_time][courier]) for package in package_range)
+                    t += f"{g.eval(value + 1)}, "
+                    to_ret[courier][ _time] = g.eval(value + 1).as_long()   
+                print(t)             
+            print("\n__________________\n")
+
+            return max_distance, to_ret, f"{time() - start_time:.2f}", iter
 
         iter += 1
         solver.pop()
@@ -262,11 +281,11 @@ def solve_one(instances, idx, to_ret1=None, to_ret2=None, to_ret3=None, to_ret4=
     m, n, D, l, s = instances[idx]['m'], instances[idx]['n'], instances[idx]['D'], instances[idx]['l'], instances[idx][
         's']
 
-    mindist, sol, time_passed, iter = multiple_couriers(m, n, D, l, s)  # *instances[idx].values()) 27
+    mindist, sol, time_passed, iter = multiple_couriers(m, n, D, l, s, to_ret1, to_ret2, to_ret3, to_ret4)  # *instances[idx].values()) 27
 
     if to_ret1 != None:
-        to_ret1.put(sol)
-        to_ret2.put(mindist)
+        to_ret1.put(mindist)
+        to_ret2.put(sol)
         to_ret3.put(time_passed)
         to_ret4.put(iter)
     return sol, mindist, time_passed, iter

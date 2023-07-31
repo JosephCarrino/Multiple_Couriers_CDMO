@@ -46,11 +46,12 @@ def implies_constraint(model, A, B):
     model += B <= 1 + A
     model += B <= 1
 
+EMPH_TO_NAME = {0: "Balanced MIP", 1: "Feasibility MIP", 2: "Optimality MIP"}
 
-def solve_multiple_couriers(m, n, D, l, s):
+def solve_multiple_couriers(m, n, D, l, s, emph=0):
     # Create the MIP model
     model = Model()
-
+    model.emphaisis = emph
     # So that the package representing the base doens't count in the weight calculation
     s += [0]
 
@@ -174,30 +175,40 @@ def solve_multiple_couriers(m, n, D, l, s):
         ]
         for courier in courier_range
     ]
+
+
     return solution, model.objective_value
 
 
 MAXITER = 500
 
 
-def minimizer_binary(instance, solver=solve_multiple_couriers, maxiter=MAXITER):
+def minimizer_binary(instance, solver=solve_multiple_couriers, maxiter=MAXITER, emph=0):
     m = instance["m"]
     n = instance["n"]
     D = instance["D"]
     l = instance["l"]
     s = instance["s"]
 
-    return solver(m, n, D, l, s)
+    return solver(m, n, D, l, s, emph=emph)
 
 
-def solve_one(instances, idx, to_ret1=None, to_ret2=None, to_ret3=None):
+def solve_one(instances, idx, to_ret1=None, to_ret2=None, to_ret3=None, emph = 0):
     start_time = time()
-    sol, mindist = minimizer_binary(instances[idx])
-    print(type(sol))
+    sol, mindist = minimizer_binary(instances[idx], emph=emph)
     time_passed = time() - start_time
+    print(f"TIME: {time_passed} - STATUS: {'sat'} - DISTANCE: {mindist}")
+    print(f"{EMPH_TO_NAME[emph]} SOLUTION: \n__________________\n")
+    for path in sol:
+        for i in range(len(path)):
+            if i != len(path)-1:
+                print(path[i], end=", ")
+            else:
+                print(path[i])
+    print("\n__________________\n")
     if to_ret1 != None:
         to_ret1.put(mindist)
-        to_ret2.put(sol)
+        to_ret2.put([[int(elem) for elem in path] for path in sol])
         to_ret3.put(time_passed)
     return sol, mindist, f"{time_passed:.2f}", iter
 

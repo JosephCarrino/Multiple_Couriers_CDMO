@@ -395,7 +395,7 @@ def multiple_couriers(m, n, D, l, s):
 
         if sol == sat:
             g = last_sol
-            print("SMT SOLUTION: \n__________________\n")
+            print("SAT SOLUTION: \n__________________\n")
             for courier in courier_range:
                 t = ""
                 for _time in time_range:
@@ -408,7 +408,7 @@ def multiple_couriers(m, n, D, l, s):
 
         if abs(min_distance - max_distance) <= 1:
             g = last_sol
-            print("SMT SOLUTION: \n__________________\n")
+            print("SAT SOLUTION: \n__________________\n")
             for courier in courier_range:
                 t = ""
                 for _time in time_range:

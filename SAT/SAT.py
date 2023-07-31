@@ -142,6 +142,7 @@ def multiple_couriers(
     iter = 1
     start_time = time()
     last_sol = None
+    g = None
     while iter < MAXITER:
         k = int((min_dist + max_dist) / 2)
         # Getting the maximum distance
@@ -149,20 +150,37 @@ def multiple_couriers(
         solver.add(at_most_k_seq(dists, k, f"Courier_dist_{i}"))
 
         sol = solver.check()
-
+        # print(g)
         if sol != sat:
             min_dist = k
         else:
             max_dist = k
             last_sol = sol
+            g = solver.model()
+        print(k)
+        print(sol)
 
         if abs(min_dist - max_dist) <= 1:
             if last_sol:
-                return k, last_sol, f"{time() - start_time:.2f}", iter
+                if g != None:
+                    paths = [[]for i in range(m)]
+                    for i in range(m):
+                        for j in range(n + 1):
+                            for z in range(n + 1):
+                                if is_true(g[c[i][j][z]]) and z != n:
+                                    paths[i].append(z+1)
+                return k, paths, f"{time() - start_time:.2f}", iter
             else:
                 return 0, "Unsat", f"{time() - start_time:.2f}", iter
         iter += 1
         solver.pop()
+    if g != None:
+        paths = [[]for i in range(m)]
+        for i in range(m):
+            for j in range(n + 1):
+                for k in range(n + 1):
+                    if is_true(g[d[i][j][k]]):
+                        paths[i].append(k)
     return k, last_sol, f"{time() - start_time:.2f}", iter
 
 
@@ -188,7 +206,7 @@ def solve_one(instances, idx, to_ret1=None, to_ret2=None, to_ret3=None, to_ret4=
 
 def main():
     instances = get_file()
-    solve_one(instances, 1)
+    solve_one(instances, 0)
 
 
 if __name__ == "__main__":

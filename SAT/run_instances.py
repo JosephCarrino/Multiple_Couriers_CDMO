@@ -5,7 +5,7 @@ import json
 import matplotlib.pyplot as plt
 import numpy as np
 
-N_INST = 2
+N_INST = 1
 FONTSIZE = 14
 
 def main():

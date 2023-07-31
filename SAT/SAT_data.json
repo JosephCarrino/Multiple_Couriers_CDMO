@@ -1,1 +1,1 @@
-{"sol": ["sat"], "min_dist": [9], "time_passed": ["54.15"], "iter": [5]}
+{"sol": ["[[3, 1, 2, 5], [6, 4]]"], "min_dist": [9], "time_passed": [2.63], "iter": [5]}

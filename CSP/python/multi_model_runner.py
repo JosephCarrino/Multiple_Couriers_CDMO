@@ -112,6 +112,7 @@ N_INSTANCES = 21
 #     return to_ret_paths, to_ret_dist, to_ret_times
 
 def specific_runner(model, number):
+    timeouted = False
     to_ret_paths = []
     to_ret_dist = []
     to_ret_times = []
@@ -124,11 +125,12 @@ def specific_runner(model, number):
     p.join(300)
     if p.is_alive():
         print("TIMEOUT")
+        timeouted = True
         p.terminate()
         p.join()
     to_ret_paths.append(paths.get() if not paths.empty() else 0)
-    to_ret_dist.append(z.get() if not z.empty() != 0 else 0)
-    to_ret_times.append(time.get() if not time.empty() != 0 else 300)
+    to_ret_dist.append(z.get() if not z.empty() else 0)
+    to_ret_times.append(time.get() if not time.empty() and not timeouted else 300)
     return to_ret_paths, to_ret_dist, to_ret_times
 
 def get_results(number):
@@ -142,13 +144,13 @@ def get_results(number):
             "time": int(time[0]),
             "optimal": optimal,
             "obj": z[0],
-            "sol": [[int(elem) for elem in courier if elem != "s"] for courier in paths[0]]
+            "sol": [[int(elem) for elem in courier if elem != "s"] for courier in paths[0]] if paths[0] != "Unsat" and paths[0] != 0 else paths[0]
         }
     with open(f"../../res/CSP/{number}.json", "w+") as f:
         json.dump(to_out, f, indent=4)
     
 def get_all_results():
-    for i in range(5, 6):
+    for i in range(21, N_INSTANCES+1):
         get_results(i)
 
 if __name__ == '__main__':

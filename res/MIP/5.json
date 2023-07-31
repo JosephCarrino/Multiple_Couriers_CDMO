@@ -1,0 +1,44 @@
+{
+    "Balanced MIP": {
+        "time": 0,
+        "optimal": true,
+        "obj": 206.0,
+        "sol": [
+            [
+                2
+            ],
+            [
+                1,
+                3
+            ]
+        ]
+    },
+    "Fesability MIP": {
+        "time": 0,
+        "optimal": true,
+        "obj": 206.0,
+        "sol": [
+            [
+                2
+            ],
+            [
+                1,
+                3
+            ]
+        ]
+    },
+    "Optimality MIP": {
+        "time": 0,
+        "optimal": true,
+        "obj": 206.0,
+        "sol": [
+            [
+                2
+            ],
+            [
+                1,
+                3
+            ]
+        ]
+    }
+}
