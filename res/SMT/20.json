@@ -1,0 +1,14 @@
+{
+    "Naive SMT": {
+        "time": 300,
+        "optimal": false,
+        "obj": 0,
+        "sol": "Unsat"
+    },
+    "Fixed SMT": {
+        "time": 300,
+        "optimal": false,
+        "obj": 0,
+        "sol": "Unsat"
+    }
+}

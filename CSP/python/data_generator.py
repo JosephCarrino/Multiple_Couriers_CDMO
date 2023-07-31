@@ -1,5 +1,9 @@
 import random
 
+'''
+    Written this generator for testing CSP before true instances were available
+'''
+
 MIN_COURIERS = 2
 COURIERS_BOUND = 3
 MIN_PACKAGES = 3

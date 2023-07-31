@@ -1,0 +1,20 @@
+{
+    "Balanced MIP": {
+        "time": 300,
+        "optimal": false,
+        "obj": 0,
+        "sol": "Unsat"
+    },
+    "Fesability MIP": {
+        "time": 300,
+        "optimal": false,
+        "obj": 0,
+        "sol": "Unsat"
+    },
+    "Optimality MIP": {
+        "time": 300,
+        "optimal": false,
+        "obj": 0,
+        "sol": "Unsat"
+    }
+}

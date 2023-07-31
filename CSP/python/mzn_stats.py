@@ -2,6 +2,10 @@ from data_generator import multi_generator as get_instances
 from model_runner import cmd_runner as get_stats
 import matplotlib.pyplot as plt
 
+'''
+    This file was used to create charts for the report using generated instances
+'''
+
 INSTANCES = 5
 FONTSIZE  = 14
 plt.rc('font', size=FONTSIZE, weight = "bold")

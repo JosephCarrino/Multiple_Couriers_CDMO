@@ -1,0 +1,44 @@
+{
+    "Default Model": {
+        "time": 0,
+        "optimal": true,
+        "obj": 206,
+        "sol": [
+            [
+                2
+            ],
+            [
+                1,
+                3
+            ]
+        ]
+    },
+    "Dom_w_deg, Indomain_min": {
+        "time": 0,
+        "optimal": true,
+        "obj": 206,
+        "sol": [
+            [
+                2
+            ],
+            [
+                1,
+                3
+            ]
+        ]
+    },
+    "Dom_w_deg, Indomain_rand": {
+        "time": 0,
+        "optimal": true,
+        "obj": 206,
+        "sol": [
+            [
+                2
+            ],
+            [
+                1,
+                3
+            ]
+        ]
+    }
+}
