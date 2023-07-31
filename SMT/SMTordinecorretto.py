@@ -208,6 +208,7 @@ def multiple_couriers(m, n, D, l, s):
         solver.push()
         solver.add(objective_value <= k)
 
+
         sol = solver.check()
 
         if sol != sat:

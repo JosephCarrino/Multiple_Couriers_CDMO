@@ -64,6 +64,11 @@ constraint forall(i in 1..m)(
     forall(j in 2..n+1)((c[i,j] == n+1) -> not exists(k in j..n+1)(c[i,k] != n+1))
 );
 
+% If a courier can take a package, he will
+constraint forall(c1 in 1..m)
+  (
+  (l[c1] >= min(s)) -> exists(k in 1..n+1)(c[c1,k] != n+1));
+
 
 % Symmetry breaking 
 
@@ -87,12 +92,13 @@ constraint symmetry_breaking_constraint(
 );
 
 
+
 % The distance to minimize is the max of the distances travelled by each
 % courier
 z = max(i in 1..m)(distances[i]);
-  
-  
-  
+
+
+
 
 solve minimize z;
 

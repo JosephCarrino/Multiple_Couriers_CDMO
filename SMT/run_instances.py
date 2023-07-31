@@ -27,10 +27,10 @@ def main():
 
         to_print["sol"].append(sol.get() if not sol.empty() else "Unsat")
         to_print["min_dist"].append(min_dist.get() if not min_dist.empty() else 0)
-        to_print["time_passed"].append(time_passed.get() if not time_passed.empty() else 300)
+        to_print["time_passed"].append(float(time_passed.get()) if not time_passed.empty() else 300)
         to_print["iter"].append(iter.get() if not iter.empty() else 0)
         print(to_print)
-    with open("SAT_data.json", "w+") as f:
+    with open("SMT_data.json", "w+") as f:
         json.dump(to_print, f)
     x = np.array([i for i in range(1, N_INST+1)])
     plt.grid()
