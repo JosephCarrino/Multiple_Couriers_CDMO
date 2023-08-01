@@ -1,5 +1,5 @@
-from MIP import solve_one
-from converter import get_file
+from .MIP import solve_one
+from .converter import get_file
 import multiprocessing
 import json
 import matplotlib.pyplot as plt
@@ -19,27 +19,7 @@ def main():
         results = []
         j = 0
         for param in MODELS:
-            timeouted = False
-            to_print = {"sol": [], "min_dist": [], "time_passed": [], "iter": []}   
-            to_out = {}
-            sol = multiprocessing.Queue()
-            min_dist = multiprocessing.Queue()
-            time_passed = multiprocessing.Queue()
-            iter = multiprocessing.Queue()
-
-            p = multiprocessing.Process(target=solve_one, args=(instances, i, min_dist, sol, time_passed, param))
-            p.start()
-            p.join(300)
-            if p.is_alive():
-                print("TIMEOUT")
-                timeouted = True
-                p.terminate()
-                p.join()
-
-            to_print["sol"].append(sol.get() if not sol.empty() else "Unsat")
-            to_print["min_dist"].append(min_dist.get() if not min_dist.empty() else 0)
-            to_print["time_passed"].append(float(time_passed.get()) if not time_passed.empty() and not timeouted else 300)
-            to_print["iter"].append(iter.get() if not iter.empty() else 0)
+            to_print = run_instance(i, instances, param)
             results.append(to_print)
             all_results.append(to_print)
             times[j].append(to_print["time_passed"][0])
@@ -69,6 +49,29 @@ def main():
         plt.plot(x, times[i], "-o", label=NAMES[i], linewidth=5)
     plt.legend()
     plt.show()
+
+
+def run_instance(i, instances, param):
+    timeouted = False
+    to_print = {"sol": [], "min_dist": [], "time_passed": [], "iter": []}
+    sol = multiprocessing.Queue()
+    min_dist = multiprocessing.Queue()
+    time_passed = multiprocessing.Queue()
+    iter = multiprocessing.Queue()
+    p = multiprocessing.Process(target=solve_one, args=(instances, i-1, min_dist, sol, time_passed, param))
+    p.start()
+    p.join(300)
+    if p.is_alive():
+        print("TIMEOUT")
+        timeouted = True
+        p.terminate()
+        p.join()
+    to_print["sol"].append(sol.get() if not sol.empty() else "Unsat")
+    to_print["min_dist"].append(min_dist.get() if not min_dist.empty() else 0)
+    to_print["time_passed"].append(float(time_passed.get()) if not time_passed.empty() and not timeouted else 300)
+    to_print["iter"].append(iter.get() if not iter.empty() else 0)
+    return to_print
+
 
 if __name__ == "__main__":
     main()

@@ -1,6 +1,6 @@
 
-from data_generator import multi_mixed_generator as get_instances
-from model_runner import cmd_runner as get_stats
+from .data_generator import multi_mixed_generator as get_instances
+from .model_runner import cmd_runner as get_stats
 import matplotlib.pyplot as plt
 import os
 import numpy as np
@@ -11,9 +11,18 @@ MODELS = ["../model.mzn",
           "../dom_deg_min.mzn", 
           "../dom_deg_rand.mzn"]
 
+MODELS_TO_EXP = ["CSP/model.mzn",
+                 "CSP/dom_deg_min.mzn",
+                 "CSP/dom_deg_rand.mzn"
+                 ]
+
 model_to_name = {MODELS[0]: "Default Model", 
                  MODELS[1]: "Dom_w_deg, Indomain_min",
                  MODELS[2]: "Dom_w_deg, Indomain_rand"}
+
+model_to_name_exp = {MODELS_TO_EXP[0]: "Default Model",
+                 MODELS_TO_EXP[1]: "Dom_w_deg, Indomain_min",
+                 MODELS_TO_EXP[2]: "Dom_w_deg, Indomain_rand"}
 
 FONTSIZE  = 14
 plt.rc("font", weight = "bold", size= FONTSIZE)
@@ -111,7 +120,7 @@ N_INSTANCES = 21
 #         to_ret_times.append(time.get() if not time.empty() != 0 else 300)
 #     return to_ret_paths, to_ret_dist, to_ret_times
 
-def specific_runner(model, number):
+def specific_runner(number, instances, model):
     timeouted = False
     to_ret_paths = []
     to_ret_dist = []
@@ -136,7 +145,7 @@ def specific_runner(model, number):
 def get_results(number):
     to_out = {}
     for model in MODELS:
-        paths, z, time = specific_runner(model, number)
+        paths, z, time = specific_runner(number, [], model)
         optimal = True
         if time[0] == 300:
             optimal = False

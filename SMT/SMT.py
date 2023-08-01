@@ -3,7 +3,7 @@ import math
 from z3 import *
 import itertools
 from time import time
-from converter import get_file
+from .converter import get_file
 
 MAXITER = 50
 
@@ -277,7 +277,7 @@ def calculate_bound_package(m, n, D, l, s):
 
 
 def solve_one(instances, idx, to_ret1=None, to_ret2=None, to_ret3=None, to_ret4=None):
-    print(instances[idx])
+
     m, n, D, l, s = instances[idx]['m'], instances[idx]['n'], instances[idx]['D'], instances[idx]['l'], instances[idx][
         's']
 

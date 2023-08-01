@@ -1,6 +1,6 @@
 from mip import Model, minimize, INTEGER, BINARY, xsum, quicksum, maximize
 import itertools
-from converter import get_file
+from .converter import get_file
 from time import time
 
 

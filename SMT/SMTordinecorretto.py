@@ -3,7 +3,7 @@ import math
 from z3 import *
 import itertools
 from time import time
-from converter import get_file
+from .converter import get_file
 import numpy as np
 
 MAXITER = 50
