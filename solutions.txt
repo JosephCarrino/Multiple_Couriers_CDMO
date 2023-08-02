@@ -1,3 +1,5 @@
+Comando per generare la documentazione: python -m pdoc ../Multiple_Couriers_CDMO -o ../Multiple_Couriers_CDMO/docs/
+
 RISULTATI DI CSP USANDO GECODE 6.3.0
 
 

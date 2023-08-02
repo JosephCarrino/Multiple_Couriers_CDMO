@@ -19,19 +19,36 @@ INSTANCES = 10
 def main():
     multi_generator()
 
-def multi_generator(instances = INSTANCES, increasingly = False):
+
+def multi_generator(instances: int = INSTANCES, increasingly: bool = False):
+    """
+    Generate a number of instances
+    :param instances: How many instances to generate
+    :param increasingly: True if each instance must be more complex than the previous one
+    """
     for i in range(instances):
         if increasingly:
             generator(i, i+1, f"instances/data{i}.dzn")
         else:
             generator(i, 1)
 
-def multi_mixed_generator(orders = 5, instances_per_order = INSTANCES):
+def multi_mixed_generator(orders: int = 5, instances_per_order: int = INSTANCES):
+    """
+    Generate different instances for with increasing complexity
+    :param orders: Number of complexity batches of instances
+    :param instances_per_order: Number of instances to be generated with each complexity order
+    """
     for i in range(orders):
         for j in range(instances_per_order):
-            generator(i, i+1, f"instances/data{i}_{j}.dzn")
+            generator(i+1, f"instances/data{i}_{j}.dzn")
 
-def generator(instance, factor, out_name):
+
+def generator(factor: int, out_name: str):
+    """
+    Function for generating an example instance
+    :param factor: the complexity facto
+    :param out_name: the name of the instance file
+    """
     random.seed()
     sum_pack_weights = float("inf")
     sum_courier_weights = 0
@@ -71,7 +88,6 @@ def generator(instance, factor, out_name):
                 else:
                     f.write("\n\t ")
         f.write("|];")
-    return  
          
 
 if __name__ == '__main__':

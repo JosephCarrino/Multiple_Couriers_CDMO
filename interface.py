@@ -1,7 +1,3 @@
-# Style import
-import pyfiglet
-# from rich import print
-
 # Importing CSP solver
 from CSP.python.multi_model_runner import specific_runner as CSP_solve
 from CSP.python.multi_model_runner import MODELS_TO_EXP as CSP_models, model_to_name_exp as CSP_names
@@ -18,10 +14,11 @@ from MIP.run_instances import run_instance as MIP_solve
 from MIP.run_instances import MODELS as MIP_params, NAMES as MIP_names
 
 # Importing instances getter
-from SMT.converter import get_file as get_instances
+from utils.converter import get_file as get_instances
 
 MIN_INSTANCE = 1
 MAX_INSTANCE = 21
+
 
 # The main function of the project.
 # It shows the possibilities for each solver and allow to run an instance on them.
@@ -76,7 +73,6 @@ def run_interface():
     print(f"\n ~~ Running {poss[strategy][0]} on instance {inst} ~~ \n")
 
     fun(inst, get_instances(), model)
-
 
 
 if __name__ == '__main__':

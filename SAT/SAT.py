@@ -1,7 +1,7 @@
 from z3 import *
 import numpy as np
 from itertools import combinations
-from converter import get_file
+from ..utils.converter import get_file
 from time import time
 
 

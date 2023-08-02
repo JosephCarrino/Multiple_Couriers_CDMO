@@ -1,5 +1,5 @@
 from SAT import solve_one
-from converter import get_file
+from ..utils.converter import get_file
 import multiprocessing
 import json
 import matplotlib.pyplot as plt
@@ -29,8 +29,8 @@ def main():
         to_print["time_passed"].append(float(time_passed.get()) if not time_passed.empty() else 300)
         to_print["iter"].append(iter.get() if not iter.empty() else 0)
         print(to_print)
-    with open("SAT_data.json", "w+") as f:
-        json.dump(to_print, f)
+    # with open("SAT_data.json", "w+") as f:
+    #     json.dump(to_print, f)
     for item in zip(to_print.items()):
         print(item)
     x = np.array([i for i in range(1, N_INST+1)])

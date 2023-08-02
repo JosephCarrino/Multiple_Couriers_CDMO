@@ -1,6 +1,6 @@
 {
     "Balanced MIP": {
-        "time": 8,
+        "time": 12,
         "optimal": true,
         "obj": 14.0,
         "sol": [
@@ -16,8 +16,8 @@
             ]
         ]
     },
-    "Fesability MIP": {
-        "time": 10,
+    "Feasibility MIP": {
+        "time": 14,
         "optimal": true,
         "obj": 14.0,
         "sol": [
@@ -34,7 +34,7 @@
         ]
     },
     "Optimality MIP": {
-        "time": 10,
+        "time": 17,
         "optimal": true,
         "obj": 14.0,
         "sol": [

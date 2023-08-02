@@ -1,22 +1,30 @@
-import math
-
+from multiprocess.queues import Queue
 from z3 import *
-import itertools
 from time import time
-from .converter import get_file
-import numpy as np
+from utils.converter import get_file
 
-MAXITER = 50
+MAXITER: int = 50
 
 
-def array_max(vs):
+def array_max(vs: list) -> int:
+    """
+    Function for finding max in an array
+    :param vs: Input array
+    :return: Max element of vs
+    """
     m = vs[0]
-    for v in vs[1:]:
-        m = If(v > m, v, m)
+    for _v in vs[1:]:
+        m = If(_v > m, _v, m)
     return m
 
 
-def lex_less(a, b):
+def lex_less(a: list[list], b: list[list]) -> bool:
+    """
+    Function for detecting lexicographic order between two strings
+    :param a: First string
+    :param b: Second string
+    :return: True if 'a' is ordered before 'b', False otherwise
+    """
     if not a:
         return True
     if not b:
@@ -24,23 +32,14 @@ def lex_less(a, b):
     return Or(a[0] <= b[0], And(a[0] == b[0], lex_less(a[1:], b[1:])))
 
 
-def convert_to_integer(y, time_range, courier_range, package_range):
-    res = [[0 for _ in time_range] for _ in courier_range]
-
-    for courier in courier_range:
-        for _time in time_range:
-            res[courier][_time] = Sum([package * y[package][_time][courier] for package in package_range])
-    return res
-
-
-def lex_less_single(a, b):
+def lex_less_single(a: list[list], b: list[list]) -> bool:
     if not a or not b:
         return True
 
     return Or(a[0] <= b[0], And(a[0] == b[0], lex_less_single(a[1:], b[1:])))
 
 
-def lex_less_no_conversion(a, b):
+def lex_less_no_conversion(a: list[list], b: list[list]) -> bool:
     if not a:
         return True
     if not b:
@@ -48,13 +47,28 @@ def lex_less_no_conversion(a, b):
     return Or(lex_less_single(a[0], b[0]), And(a[0] == b[0], lex_less_no_conversion(a[1:], b[1:])))
 
 
-def multiple_couriers(m, n, D, l, s, to_ret1, to_ret2, to_ret3, to_ret4):
+def multiple_couriers(m: int, n: int, D: list[list[int]], l: list[int], s: list[int],
+                      to_ret1: Queue, to_ret2: Queue, to_ret3: Queue, to_ret4: Queue) \
+        -> (int, list[list[str]], float, int):
+    """
+    SMT solver with addition of symmetry breaking constraints such as maintaining couriers lexicographic order
+    :param m: Number of couriers
+    :param n: Number of packages
+    :param D: Matrix of packages distances
+    :param l: List of carriable weight by each courier
+    :param s: List of weights of the packages
+    :param to_ret1: Queue for returning minimized distance
+    :param to_ret2: Queue for returning found solution
+    :param to_ret3: Queue for returning time of computation
+    :param to_ret4: Queue for returning iterations number
+    :return: Minimized distance, found solution, computation time and iterations number
+    """
     # solver = Solver()
     solver = Then('simplify', 'elim-term-ite', 'solve-eqs', 'smt').solver()
 
-    upper_bound, lower_bound = calculate_bound_package(m, n, D, l, s)
+    upper_bound, lower_bound = calculate_bound_package(m, n, l, s)
 
-    # So that the package representing the base doens't count in the weight calculation
+    # So that the package representing the base doesn't count in the weight calculation
     s += [0]
 
     # Ranges
@@ -145,7 +159,7 @@ def multiple_couriers(m, n, D, l, s, to_ret1, to_ret2, to_ret3, to_ret4):
     # Symmetry breaking constraints
     # integer_matrix = convert_to_integer(y, time_range, courier_range, package_range)
 
-    #If two couriers have the same capacity then they are symmetric, we impose an order between them
+    # If two couriers have the same capacity then they are symmetric, we impose an order between them
     for c1 in courier_range:
         for c2 in courier_range:
             if c1 < c2 and l[c1] == l[c2]:
@@ -170,7 +184,6 @@ def multiple_couriers(m, n, D, l, s, to_ret1, to_ret2, to_ret3, to_ret4):
         solver.add(package_transported <= upper_bound)
         solver.add(package_transported >= lower_bound)
 
-
     # Optimization
 
     # Getting maximum distance
@@ -186,28 +199,20 @@ def multiple_couriers(m, n, D, l, s, to_ret1, to_ret2, to_ret3, to_ret4):
     for i in range(len(D)):
         max_distance += max(D[i])
 
-    # print(f"{max_distance=}, {min_distance=}")
     max_distance = math.ceil(max_distance)  # / upper_bound)
     min_distance = max(min_distance, math.floor(min_distance))  # * lower_bound))
-    # print(f"{max_distance=}, {min_distance=}")
-
-    # print(f"constraint number: {len(solver.assertions())}")
-
 
     start_time = time()
-    iter = 1
+    iterations = 1
     last_sol = None
-    while iter < MAXITER:
+    while iterations < MAXITER:
 
         weight = 0.5  # + (0.2 * math.exp(-0.2 * iter))
 
         k = int(((1 - weight) * min_distance + weight * max_distance))
 
-        # print(f"current k={k}, {weight=}")
-
         solver.push()
         solver.add(objective_value <= k)
-
 
         sol = solver.check()
 
@@ -219,7 +224,7 @@ def multiple_couriers(m, n, D, l, s, to_ret1, to_ret2, to_ret3, to_ret4):
 
         to_ret = [[0 for _ in range(last_time + 1)] for _ in range(len(courier_range))]
 
-        print(f"ITERATION: {iter} - TIME: {time() - start_time} - STATUS: {sol} - DISTANCE: {k}")
+        print(f"ITERATION: {iterations} - TIME: {time() - start_time} - STATUS: {sol} - DISTANCE: {k}")
 
         if sol == sat:
             g = last_sol
@@ -229,14 +234,14 @@ def multiple_couriers(m, n, D, l, s, to_ret1, to_ret2, to_ret3, to_ret4):
                 for _time in time_range:
                     value = sum(package * g.eval(y[courier][package][_time]) for package in package_range)
                     t += f"{g.eval(value + 1)}, "
-                    to_ret[courier][ _time] = g.eval(value + 1).as_long()
+                    to_ret[courier][_time] = g.eval(value + 1).as_long()
                 print(t)
-            
-            if to_ret1 != None:
+
+            if to_ret1 is not None:
                 to_ret1.put(k)
                 to_ret2.put(to_ret)
                 to_ret3.put(f"{time() - start_time:.2f}")
-                to_ret4.put(iter)
+                to_ret4.put(iterations)
             print("\n__________________\n")
 
         if abs(min_distance - max_distance) <= 1:
@@ -247,19 +252,29 @@ def multiple_couriers(m, n, D, l, s, to_ret1, to_ret2, to_ret3, to_ret4):
                 for _time in time_range:
                     value = sum(package * g.eval(y[courier][package][_time]) for package in package_range)
                     t += f"{g.eval(value + 1)}, "
-                    to_ret[courier][ _time] = g.eval(value + 1).as_long()   
-                print(t)             
+                    to_ret[courier][_time] = g.eval(value + 1).as_long()
+                print(t)
             print("\n__________________\n")
 
-            return max_distance, to_ret, f"{time() - start_time:.2f}", iter
+            return max_distance, to_ret, f"{time() - start_time:.2f}", iterations
 
-        iter += 1
+        iterations += 1
         solver.pop()
 
-    return max_distance, "Out of _time", f"{time() - start_time:.2f}", iter
+    return max_distance, "Out of _time", f"{time() - start_time:.2f}", iterations
 
 
-def calculate_bound_package(m, n, D, l, s):
+def calculate_bound_package(m: int, n: int, l: list[int], s: list[int]) -> (int, int):
+    """
+    Function for calculating bounds for the number of packages carriable by each courier
+    It works considering the range of carriable weights and the range of packages weights
+    Then a delta is computed considering the total carriable weight
+    :param m: Number of couriers
+    :param n: Number of packages
+    :param l: List of carriable weight by each courier
+    :param s: List of weights of the packages
+    :return: General upper and lower bound
+    """
     weight_sum = sum(s)
     capacity_min = min(l)
 
@@ -279,23 +294,33 @@ def calculate_bound_package(m, n, D, l, s):
 
     upper_bound = min(n, upper_bound + delta)
     lower_bound = max(0, lower_bound - delta)
-    # print(f"{delta=}, {upper_bound=}, {lower_bound=}")
 
     return upper_bound, lower_bound
 
 
-def solve_one(instances, idx, to_ret1=None, to_ret2=None, to_ret3=None, to_ret4=None):
-    # print(instances[idx])
-    m, n, D, l, s = instances[idx]['m'], instances[idx]['n'], instances[idx]['D'], instances[idx]['l'], instances[idx][
-        's']
+def solve_one(instances: list[dict], idx: int, to_ret1: Queue = None, to_ret2: Queue = None,
+              to_ret3: Queue = None, to_ret4: Queue = None) -> (list[list[str]], int, float, int):
+    """
+    Function for actually using the solver on one given instance
+    :param instances: List of available instances
+    :param idx: Index of desired instance
+    :param to_ret1: Queue for returning minimized distance
+    :param to_ret2: Queue for returning found solution
+    :param to_ret3: Queue for returning time of computation
+    :param to_ret4: Queue for returning iterations number
+    :return: Solution found, minimized distance, time of computation and number of iterations
+    """
+    m, n, D, l, s = instances[idx]['m'], instances[idx]['n'], instances[idx]['D'], instances[idx]['l'], \
+                    instances[idx]['s']
 
-    mindist, sol, time_passed, iter = multiple_couriers(m, n, D, l, s, to_ret1, to_ret2, to_ret3, to_ret4)  # *instances[idx].values()) 27
-    if to_ret1 != None:
+    mindist, sol, time_passed, iterations = multiple_couriers(m, n, D, l, s,
+                                                              to_ret1, to_ret2, to_ret3, to_ret4)
+    if to_ret1 is not None:
         to_ret1.put(mindist)
         to_ret2.put(sol)
         to_ret3.put(time_passed)
-        to_ret4.put(iter)
-    return sol, mindist, time_passed, iter
+        to_ret4.put(iterations)
+    return sol, mindist, time_passed, iterations
 
 
 def main():

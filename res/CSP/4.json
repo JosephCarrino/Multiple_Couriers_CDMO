@@ -1,6 +1,6 @@
 {
     "Default Model": {
-        "time": 28,
+        "time": 30,
         "optimal": true,
         "obj": 220,
         "sol": [
@@ -33,45 +33,10 @@
         ]
     },
     "Dom_w_deg, Indomain_min": {
-        "time": 296,
+        "time": 30,
         "optimal": true,
         "obj": 220,
         "sol": [
-            [
-                4
-            ],
-            [
-                5,
-                1,
-                2
-            ],
-            [
-                6,
-                3
-            ],
-            [
-                7
-            ],
-            [
-                8
-            ],
-            [
-                9
-            ],
-            [
-                10
-            ],
-            []
-        ]
-    },
-    "Dom_w_deg, Indomain_rand": {
-        "time": 88,
-        "optimal": true,
-        "obj": 220,
-        "sol": [
-            [
-                1
-            ],
             [
                 4,
                 2
@@ -80,14 +45,49 @@
                 5
             ],
             [
-                6,
-                3
+                6
             ],
             [
                 7
             ],
             [
+                8
+            ],
+            [
                 9,
+                1
+            ],
+            [
+                10,
+                3
+            ],
+            []
+        ]
+    },
+    "Dom_w_deg, Indomain_rand": {
+        "time": 30,
+        "optimal": true,
+        "obj": 220,
+        "sol": [
+            [
+                1
+            ],
+            [
+                3,
+                9,
+                4,
+                2
+            ],
+            [
+                5
+            ],
+            [
+                6
+            ],
+            [
+                7
+            ],
+            [
                 8
             ],
             [

@@ -13,7 +13,7 @@
             ]
         ]
     },
-    "Fesability MIP": {
+    "Feasibility MIP": {
         "time": 0,
         "optimal": true,
         "obj": 206.0,

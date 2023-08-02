@@ -5,7 +5,7 @@
         "obj": 0,
         "sol": "Unsat"
     },
-    "Feasability MIP": {
+    "Feasibility MIP": {
         "time": 300,
         "optimal": false,
         "obj": 0,
