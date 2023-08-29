@@ -9,72 +9,6 @@ from utils.converter import get_file
 from time import time
 
 
-def get_package_at_time_t(_time: int, courier: int, y: list[list[list[Var]]],
-                          package_range: collections.Iterable) -> any:
-    """
-    Function that returns the package taken by a certain courier at a given time
-    :param _time: Given time
-    :param courier: Given courier
-    :param y: Solver variables of booleans
-    :param package_range: Number of packages
-    :return: Package took at time 'time' by courier 'courier'
-    """
-    return sum(package * y[package][_time][courier] for package in package_range).x
-
-
-def and_constraint(model, A, B):
-    """
-    Function that defines the and operator
-    :param model: Solver where to add the constraint
-    :param A: First formula
-    :param B: Second formula
-    :return: The built constraint
-    """
-    # A and B
-    # A = 0, B = 0 => 0
-    # A = 0, B = 1 => 0
-    # A = 1, B = 0 => 0
-    # A = 1, B = 0 => 1
-
-    # v_and new variable
-    # v_and <= A
-    # v_and <= B
-    # v_and >= A + B - 1
-
-    v_and = model.add_var(name=f"and({A.name}, {B.name})", var_type=BINARY)
-
-    model += v_and <= A
-    model += v_and <= B
-    model += v_and >= A + B - 1
-
-    return v_and
-
-
-def implies_constraint(model, A, B):
-    """
-    Function that defines the imply operator
-    :param model: Solver where to add the constraint
-    :param A: First formula
-    :param B: Second formula
-    :return: The built constraint
-    """
-    # A => B
-    # A = {0, 1}
-
-    # If A == 1 then B == 1
-    # else B == {0, 1}
-
-    # A <= B <= 1 + A
-    # B <= 1
-
-    # A = 0 ... 0 <= B <= 1
-    # A = 1 ... 1 <= B <= 2 , B <= 1 => B = 1
-
-    model += A <= B
-    model += B <= 1 + A
-    model += B <= 1
-
-
 EMPH_TO_NAME = {0: "Balanced MIP", 1: "Feasibility MIP", 2: "Optimality MIP"}
 
 
@@ -90,6 +24,9 @@ def solve_multiple_couriers(m: int, n: int, D: list[list[int]], l: list[int], s:
     :param emph: Parameter of solver emphasis (Balanced, Feasibility, Optimality)
     :return: Found solution and minimized distance
     """
+    print(f"Couriers: {m}")
+    print(f"Packages: {n}")
+
     # Create the MIP model
     model = Model()
     model.emphaisis = emph
@@ -98,6 +35,7 @@ def solve_multiple_couriers(m: int, n: int, D: list[list[int]], l: list[int], s:
 
     # Ranges
     package_range = range(n + 1)
+    package_range_no_base = range(n)
     time_range = range(n + 2)
     time_range_no_zero = range(1, time_range[-1])
     courier_range = range(m)
@@ -107,87 +45,118 @@ def solve_multiple_couriers(m: int, n: int, D: list[list[int]], l: list[int], s:
     last_time = n + 1
     list(itertools.product(courier_range, time_range))
 
-    # Variables
-    # y[p][t][c] == 1 se c porta p al tempo t
-    y = [
-        [
-            [
-                model.add_var(name=f"y_{package}_{_time}_{courier}", var_type=BINARY)
-                for courier in courier_range
-            ]
-            for _time in time_range
-        ]
-        for package in package_range
-    ]
+    ## Variables
 
-    # weights vector, weights[c] is the amount transported by c
+    # y_{courier}_{p1}_{p2} == 1 if courier goes from p1 to p2
+    y = [[[model.add_var(name=f"y_{courier}_{p1}_{p2}", var_type=BINARY, lb=0, ub=1)
+           for p2 in package_range]
+          for p1 in package_range]
+         for courier in courier_range]
+
+    # Weights
+
     weights = []
     for courier in courier_range:
+        # s[p1] * y[courier][p1][p2] for p1 in package_range for p2 in package_range
         weights.append(
             xsum(
-                s[package] * y[package][_time][courier]
-                for _time in time_range
-                for package in package_range
+                s[p1] * y[courier][p1][p2]
+                for p1 in package_range
+                for p2 in package_range
             )
         )
 
-    # distances vector, distances[c] is the amount travelled by c
     distances = []
     for courier in courier_range:
-        courier_distances = []
-        for _time in time_range_no_zero:
-            for p1 in package_range:
-                for p2 in package_range:
-                    a = y[p1][_time - 1][courier]
-                    b = y[p2][_time][courier]
-                    courier_distances.append(D[p1][p2] * and_constraint(model, a, b))
-
-        distances.append(xsum(courier_distances))
-
-    # Each package taken one time only
-    for package in package_range:
-        if package == base_package:
-            continue
-        model += (
-                xsum(
-                    y[package][_time][courier]
-                    for _time in time_range
-                    for courier in courier_range
-                )
-                == 1
+        distances.append(
+            xsum(
+                D[p1][p2] * y[courier][p1][p2]
+                for p1 in package_range
+                for p2 in package_range
+            )
         )
 
-    # A courier carry only one package at time
+    ## Contraints
+    #
+    # Correctness of the path
     for courier in courier_range:
-        for _time in time_range:
-            model += xsum(y[package][_time][courier] for package in package_range) == 1
+        # If y[courier][p1][p2] == 1 then y[courier][p3][p1] == 1
+        for p1 in package_range:
+            for p2 in package_range:
+                # Case 1
+                # y[base/p3][p1] == 1
+                # y[p1][base/p2] == 1
+
+                # Case 2
+                # y[base/p1][p2] == 1
+                # y[p2/p3][base/p1] == 1
+
+                # Case 3
+                # y[p4/p1][p5/p2]
+                # y[p5/p3][p4/p1]
+
+                # Case 4
+                # y[p4/p3][p5/p1]
+                # y[p5/p1][p4/p2]
+                condition = y[courier][p1][p2]
+                p3_gen_base = (
+                    p3 for p3 in package_range if
+                    (p3 == base_package)        # Case 1
+                    or (p1 == base_package)     # Case 2
+                    or (p3 != p1 and p3 != p2)  # Case 3
+                )
+                results = xsum(y[courier][p3][p1] for p3 in p3_gen_base)
+
+                # condition = 1 => results = 1
+                # condition = 0 => results = {0, 1}
+                model += results <= 1
+                model += results >= condition
+
+
+    path_increment = [[model.add_var(name=f"path_increment_{courier}_{p}", var_type=INTEGER, lb=0, ub=n)
+          for p in package_range]
+         for courier in courier_range]
+
+    # Link between y and z
+    for courier in courier_range:
+        path_increment[courier][base_package] = 0
+
+    for courier in courier_range:
+        for p1 in package_range:
+            for p2 in package_range_no_base:
+                model += path_increment[courier][p2] >= path_increment[courier][p1] + 1 - n * (1 - y[courier][p1][p2])
+                model += path_increment[courier][p2] <= path_increment[courier][p1] + 1 + n * (1 - y[courier][p1][p2])
+
+
+    ## Optimizaiton
+    for courier in courier_range:
+        for p1 in package_range:
+            model += y[courier][p1][p1] == 0
+
+    for courier in courier_range:
+        for p1 in package_range:
+            for p2 in package_range_no_base:
+                condition = y[courier][p1][p2]
+                results = xsum(y[courier][p2][p3] for p3 in package_range)
+
+                model += results <= 1
+                model += results >= condition
 
     # Every carried package must be delivered to destination and every courier must start from destination
     for courier in courier_range:
-        model += y[base_package][0][courier] == 1
-        model += y[base_package][last_time][courier] == 1
+        # Parto dalla base 1 volta
+        model += xsum(y[courier][base_package][package] for package in package_range) == 1
+
+        # Torno alla base 1 volta
+        model += xsum(y[courier][package][base_package] for package in package_range) == 1
+
+    # Each package is carried only once
+    for package in package_range_no_base:
+        model += xsum(y[courier][package][p2] for courier in courier_range for p2 in package_range) == 1
 
     # Each courier can hold packages with total weight <= max carriable weight
     for courier in courier_range:
         model += weights[courier] <= l[courier]
-
-    # Couriers must immediately start with a package after the base
-    for courier in courier_range:
-        for _time in time_range_no_zero:
-            a = y[base_package][_time][courier]
-            b = y[base_package][1][courier]
-
-            # 1 - a => 1 - b is saying a != 1 => b != 1
-            implies_constraint(model, 1 - a, 1 - b)
-
-    # Couriers cannot go back to the base before taking other packages
-    for courier in courier_range:
-        for _time in time_range_no_zero:
-            a = y[base_package][_time][courier]
-
-            for time2 in range(_time + 1, last_time):
-                b = y[base_package][time2][courier]
-                implies_constraint(model, a, b)
 
     # Calculate d_max
     d_max = model.add_var(var_type=INTEGER)
@@ -196,17 +165,36 @@ def solve_multiple_couriers(m: int, n: int, D: list[list[int]], l: list[int], s:
 
     model.objective = minimize(d_max)
     model.verbose = 0
+
     # Solve the MIP model
     model.optimize(max_seconds=300)
 
     # Extract the solution
-    solution = [
-        [
-            int(get_package_at_time_t(_time, courier, y, package_range) + 1)
-            for _time in time_range
-        ]
-        for courier in courier_range
-    ]
+    solution = [[0
+                 for _ in time_range]
+                for courier in courier_range]
+    print("solution, ", y)
+
+    for courier in courier_range:
+        print(f"Courier {courier}")
+        for p1 in package_range:
+            for p2 in package_range:
+                if y[courier][p1][p2].x == 1:
+                    p1_str = p1 if p1 != base_package else "Base"
+                    p2_str = p2 if p2 != base_package else "Base"
+
+                    print(f"{p1_str}, {p2_str}")
+        # print("\n\n\n")
+        print("___")
+
+    for courier in courier_range:
+        for p1 in package_range:
+            try:
+                z_value = int(z[courier][p1].x)
+            except:
+                z_value = "BASE"#int(z[courier][p1])
+
+            print(f"Courier {courier}, package {p1}, z = {z_value}")
 
     return solution, model.objective_value
 
@@ -264,7 +252,16 @@ def solve_one(instances: list[dict], idx: int, to_ret1: Queue = None, to_ret2: Q
 
 def main():
     instances = get_file()
-    solve_one(instances, 0)
+    instance_number = 8
+
+    print(f"Instance {instance_number}")
+
+    _, mindist, t, _ = solve_one(instances, instance_number)
+
+    print("\n\n\n")
+
+    print(f"Min distance {mindist}")
+    print(f"Time passed {t}s")
 
 
 if __name__ == "__main__":
