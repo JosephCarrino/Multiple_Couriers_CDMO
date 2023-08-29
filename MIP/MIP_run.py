@@ -8,7 +8,6 @@ from multiprocess.queues import Queue
 from utils.converter import get_file
 from time import time
 
-
 EMPH_TO_NAME = {0: "Balanced MIP", 1: "Feasibility MIP", 2: "Optimality MIP"}
 
 
@@ -101,8 +100,8 @@ def solve_multiple_couriers(m: int, n: int, D: list[list[int]], l: list[int], s:
                 condition = y[courier][p1][p2]
                 p3_gen_base = (
                     p3 for p3 in package_range if
-                    (p3 == base_package)        # Case 1
-                    or (p1 == base_package)     # Case 2
+                    (p3 == base_package)  # Case 1
+                    or (p1 == base_package)  # Case 2
                     or (p3 != p1 and p3 != p2)  # Case 3
                 )
                 results = xsum(y[courier][p3][p1] for p3 in p3_gen_base)
@@ -112,10 +111,9 @@ def solve_multiple_couriers(m: int, n: int, D: list[list[int]], l: list[int], s:
                 model += results <= 1
                 model += results >= condition
 
-
     path_increment = [[model.add_var(name=f"path_increment_{courier}_{p}", var_type=INTEGER, lb=0, ub=n)
-          for p in package_range]
-         for courier in courier_range]
+                       for p in package_range]
+                      for courier in courier_range]
 
     # Link between y and z
     for courier in courier_range:
@@ -126,7 +124,6 @@ def solve_multiple_couriers(m: int, n: int, D: list[list[int]], l: list[int], s:
             for p2 in package_range_no_base:
                 model += path_increment[courier][p2] >= path_increment[courier][p1] + 1 - n * (1 - y[courier][p1][p2])
                 model += path_increment[courier][p2] <= path_increment[courier][p1] + 1 + n * (1 - y[courier][p1][p2])
-
 
     ## Optimizaiton
     for courier in courier_range:
@@ -163,38 +160,26 @@ def solve_multiple_couriers(m: int, n: int, D: list[list[int]], l: list[int], s:
     for courier in courier_range:
         model += d_max >= distances[courier]
 
-    model.objective = minimize(d_max)
     model.verbose = 0
+    model.objective = minimize(d_max)
 
     # Solve the MIP model
     model.optimize(max_seconds=300)
 
-    # Extract the solution
-    solution = [[0
+    # Build the solution
+    solution = [[base_package
                  for _ in time_range]
-                for courier in courier_range]
-    print("solution, ", y)
-
-    for courier in courier_range:
-        print(f"Courier {courier}")
-        for p1 in package_range:
-            for p2 in package_range:
-                if y[courier][p1][p2].x == 1:
-                    p1_str = p1 if p1 != base_package else "Base"
-                    p2_str = p2 if p2 != base_package else "Base"
-
-                    print(f"{p1_str}, {p2_str}")
-        # print("\n\n\n")
-        print("___")
+                for _ in courier_range]
 
     for courier in courier_range:
         for p1 in package_range:
             try:
-                z_value = int(z[courier][p1].x)
+                z_value = int(path_increment[courier][p1].x)
             except:
-                z_value = "BASE"#int(z[courier][p1])
+                z_value = 0
 
-            print(f"Courier {courier}, package {p1}, z = {z_value}")
+            if z_value != 0:
+                solution[courier][z_value] = p1
 
     return solution, model.objective_value
 
@@ -252,7 +237,7 @@ def solve_one(instances: list[dict], idx: int, to_ret1: Queue = None, to_ret2: Q
 
 def main():
     instances = get_file()
-    instance_number = 8
+    instance_number = 0
 
     print(f"Instance {instance_number}")
 
