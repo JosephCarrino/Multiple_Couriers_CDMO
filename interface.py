@@ -3,7 +3,8 @@ from CSP.python.multi_model_runner import specific_runner as CSP_solve
 from CSP.python.multi_model_runner import MODELS_TO_EXP as CSP_models, model_to_name_exp as CSP_names
 
 # Importing SAT solver
-# TODO ...
+from SAT.run_instances import run_instance as SAT_solve
+from SAT.run_instances import MODELS as SAT_models, NAMES as SAT_names
 
 # Importing SMT solver
 from SMT.run_instances import run_instance as SMT_solve
@@ -32,13 +33,13 @@ def run_interface():
 ╚══════╝╚═╝  ╚═╝   ╚═╝   ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝    ╚═════╝      ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝╚═╝╚═╝     ╚══════╝
                                                                                                                       ''')
     csp_poss = [(CSP_names[CSP_models[i]], CSP_models[i], CSP_solve) for i in range(len(CSP_models))]
-    # sat_poss = ...
+    sat_poss = [(SAT_names[i], SAT_models[i], SAT_solve) for i in range(len(SAT_models))]
     smt_poss = [(SMT_names[i], SMT_models[i], SMT_solve) for i in range(len(SMT_models))]
     mip_poss = [(MIP_names[MIP_params[i]], MIP_params[i], MIP_solve) for i in range(len(MIP_params))]
 
     all_poss = {
         '0': ("CSP", csp_poss),
-        # '1': sat_poss,
+        '1': ("SAT", sat_poss),
         '2': ("SMT", smt_poss),
         '3': ("MIP", mip_poss)
     }
