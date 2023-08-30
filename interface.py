@@ -21,6 +21,18 @@ MIN_INSTANCE = 1
 MAX_INSTANCE = 21
 
 
+def convert_result_to_json(result):
+    out = {}
+
+    out["time"] = int(result["time_passed"][0])
+    out["optimal"] = out["time"] < 300
+    out["obj"] = result["min_dist"][0]
+    out["sol"] = [[int(elem) for elem in courier if int(elem) != int(courier[0])] for courier in
+                  result["sol"][0]] if result["sol"][0] != "Unsat" else result["sol"][0]
+
+
+    return out
+
 # The main function of the project.
 # It shows the possibilities for each solver and allow to run an instance on them.
 def run_interface():
@@ -51,7 +63,9 @@ def run_interface():
     approach = input()
     poss = all_poss[approach]
 
-    print(f"\n--- You have chosen {poss[0]} ---\n")
+    method_name = poss[0]
+
+    print(f"\n--- You have chosen {method_name} ---\n")
     print(f"--- Choose the solving strategy ---")
 
     poss = poss[1]
@@ -61,19 +75,29 @@ def run_interface():
         print(f"Press {i} for: {strat_name}")
         print("~~~~~~~~\n")
 
-    strategy = int(input())
-    model = poss[strategy][1]
+    strategy_number = int(input())
+
+    strategy_name, model = poss[strategy_number][0], poss[strategy_number][1]
+
+    print(f"{method_name=}, {strategy_name=}, {model=}")
 
     print(f"\n--- Choose the instance ---")
     print(f"\n~~ A number between {MIN_INSTANCE} and {MAX_INSTANCE} ~~")
 
     inst = int(input())
 
-    fun = poss[strategy][2]
+    print(f"\n--- You have chosen instance {inst} ---")
 
-    print(f"\n ~~ Running {poss[strategy][0]} on instance {inst} ~~ \n")
+    fun = poss[strategy_number][2]
 
-    fun(inst, get_instances(), model)
+    print(f"\n ~~ Running {poss[strategy_number][0]} on instance {inst} ~~ \n")
+
+
+    result = fun(inst, get_instances(), model)
+    json_data = convert_result_to_json(result)
+
+    print(f"\n ~~ Result ~~ \n")
+    print(json_data)
 
 
 if __name__ == '__main__':

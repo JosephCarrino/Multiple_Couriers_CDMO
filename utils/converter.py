@@ -1,20 +1,33 @@
 import os
 import re
 import numpy as np
+import pathlib as pl
 
-INSTANCES_DIR = f"{os.path.abspath(__file__)}\\..\\..\\instances"
+
+#INSTANCES_DIR = f"{os.path.abspath(__file__)}\\..\\..\\instances"
+INSTANCES_DIR = pl.Path(__file__).parent.parent / "instances"
+
 
 def get_file() -> list[dict]:
     """
     Function for extracting all instances and getting them as dictionaries
     :return: List of all instances
     """
-    instances = []
+    instances_count = len([0 for x in os.listdir(INSTANCES_DIR) if x.endswith(".dat")])
+
+
+    instances = [{} for _ in range(instances_count)]
     for instance in os.listdir(INSTANCES_DIR):
         if not instance.endswith(".dat"):
             continue
-        with open(f"{INSTANCES_DIR}\\{instance}") as f:
+
+        instance_number = int(instance[4:6])
+        instance_path = pl.Path(INSTANCES_DIR) / instance
+
+        with open(instance_path, "r") as f:
             text = f.read()
+
+
         lines = text.split("\n")
         # regex to get a number from a string
         num_regex = r"(\d+)"
@@ -32,10 +45,11 @@ def get_file() -> list[dict]:
         l = [int(x) for x in l]
         s = [int(x) for x in s]
 
-        to_ret = {"m": m,
+        problem_data = {"m": m,
                   "n": n,
                   "D": distances.tolist(),
                   "l": l,
                   "s": s, }
-        instances.append(to_ret)
+
+        instances[instance_number - 1] = problem_data
     return instances
