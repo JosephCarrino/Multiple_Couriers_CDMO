@@ -1,12 +1,12 @@
 from SMT.SMTordinecorretto import solve_one as fixed_solve
 from SMT.SMT_naive import solve_one as first_solve
-from utils.converter import get_file
+from utils.converter import get_instances
 import multiprocessing
 import json
 import matplotlib.pyplot as plt
 import numpy as np
 
-N_INST: int = 10
+N_INST: int = 2
 
 MODELS: list[any] = [first_solve, fixed_solve]
 
@@ -19,7 +19,7 @@ def main():
     The output are .json files in the 'res' directory with solution, minimized distance,
     boolean of optimality and time of computation
     """
-    instances = get_file()
+    instances = get_instances()
     times = [[] for _ in range(len(MODELS))]
     all_results = []
     for i in range(1, N_INST + 1):

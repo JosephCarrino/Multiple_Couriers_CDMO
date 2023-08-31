@@ -8,21 +8,21 @@ import pathlib as pl
 INSTANCES_DIR = pl.Path(__file__).parent.parent / "instances"
 
 
-def get_file() -> list[dict]:
+def get_instances(instances_dir: pl.Path = INSTANCES_DIR) -> list[dict]:
     """
     Function for extracting all instances and getting them as dictionaries
     :return: List of all instances
     """
-    instances_count = len([0 for x in os.listdir(INSTANCES_DIR) if x.endswith(".dat")])
+    instances_count = len([0 for x in os.listdir(instances_dir) if x.endswith(".dat")])
 
 
     instances = [{} for _ in range(instances_count)]
-    for instance in os.listdir(INSTANCES_DIR):
+    for instance in os.listdir(instances_dir):
         if not instance.endswith(".dat"):
             continue
 
         instance_number = int(instance[4:6])
-        instance_path = pl.Path(INSTANCES_DIR) / instance
+        instance_path = pl.Path(instances_dir) / instance
 
         with open(instance_path, "r") as f:
             text = f.read()

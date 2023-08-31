@@ -1,7 +1,7 @@
 from multiprocess.queues import Queue
 from z3 import *
 from time import time
-from utils.converter import get_file
+from utils.converter import get_instances
 
 MAXITER: int = 50
 
@@ -44,12 +44,19 @@ def lex_less_no_conversion(a: list[list], b: list[list]) -> bool:
         return True
     if not b:
         return False
-    return Or(lex_less_single(a[0], b[0]), And(a[0] == b[0], lex_less_no_conversion(a[1:], b[1:])))
+
+    # Added the last term because sometimes the And was from a different context
+    return Or(lex_less_single(a[0], b[0]), And(a[0] == b[0], lex_less_no_conversion(a[1:], b[1:]), a[0][0].ctx))
 
 
-def multiple_couriers(m: int, n: int, D: list[list[int]], l: list[int], s: list[int],
-                      to_ret1: Queue, to_ret2: Queue, to_ret3: Queue, to_ret4: Queue) \
-        -> (int, list[list[str]], float, int):
+def multiple_couriers(
+        m: int,
+        n: int,
+        D: list[list[int]],
+        l: list[int],
+        s: list[int],
+        model_result: dict,
+) -> (int, list[list[str]], float, int):
     """
     SMT solver with addition of symmetry breaking constraints such as maintaining couriers lexicographic order
     :param m: Number of couriers
@@ -57,16 +64,15 @@ def multiple_couriers(m: int, n: int, D: list[list[int]], l: list[int], s: list[
     :param D: Matrix of packages distances
     :param l: List of carriable weight by each courier
     :param s: List of weights of the packages
-    :param to_ret1: Queue for returning minimized distance
-    :param to_ret2: Queue for returning found solution
-    :param to_ret3: Queue for returning time of computation
-    :param to_ret4: Queue for returning iterations number
     :return: Minimized distance, found solution, computation time and iterations number
     """
     # solver = Solver()
     solver = Then('simplify', 'elim-term-ite', 'solve-eqs', 'smt').solver()
 
     upper_bound, lower_bound = calculate_bound_package(m, n, l, s)
+
+    # print(f"Upper bound: {upper_bound}")
+    # print(f"Lower bound: {lower_bound}")
 
     # So that the package representing the base doesn't count in the weight calculation
     s += [0]
@@ -82,9 +88,16 @@ def multiple_couriers(m: int, n: int, D: list[list[int]], l: list[int], s: list[
     base_package = n
     last_time = time_range[-1]
 
+    ## Solver ##
+    context = Context()
+    solver = Then('simplify', 'elim-term-ite', 'solve-eqs', 'smt', ctx=context).solver()
+    # solver = Solver(ctx=context)
+
+    assert solver.ctx != main_ctx()
+
     # Variables
     # y[p][t][c] == 1 se c porta p al tempo t
-    y = [[[Int(f"y_{courier}_{package}_{_time}")
+    y = [[[Int(f"y_{courier}_{package}_{_time}", ctx=context)
            for _time in time_range]
           for package in package_range]
          for courier in courier_range]
@@ -169,10 +182,10 @@ def multiple_couriers(m: int, n: int, D: list[list[int]], l: list[int], s: list[
     for c1 in courier_range:
         for c2 in courier_range:
             if c1 < c2:
-                max_weight = If(weights[c1] > weights[c2], weights[c1], weights[c2])
-                min_capacity = If(l[c1] < l[c2], l[c1], l[c2])
-                condition = max_weight <= min_capacity
+                max_weight = If(weights[c1] > weights[c2], weights[c1], weights[c2], ctx=context)
+                min_capacity = If(l[c1] < l[c2], l[c1], l[c2], ctx=context)
 
+                condition = max_weight <= min_capacity
                 solver.add(Implies(condition, lex_less_no_conversion(y[c1], y[c2])))
 
     # Heuristic (?)
@@ -204,7 +217,7 @@ def multiple_couriers(m: int, n: int, D: list[list[int]], l: list[int], s: list[
 
     start_time = time()
     iterations = 1
-    last_sol = None
+    last_best_sol = None
     while iterations < MAXITER:
 
         weight = 0.5  # + (0.2 * math.exp(-0.2 * iter))
@@ -220,49 +233,28 @@ def multiple_couriers(m: int, n: int, D: list[list[int]], l: list[int], s: list[
             min_distance = k
         else:
             max_distance = k
-            last_sol = solver.model()
+            last_best_sol = solver.model()
 
-        to_ret = [[0 for _ in range(last_time + 1)] for _ in range(len(courier_range))]
+            # Building solution matrix and store the intermediate solution
+            last_solution_matrix = [[0 for _ in range(last_time + 1)] for _ in range(len(courier_range))]
 
-        print(f"ITERATION: {iterations} - TIME: {time() - start_time} - STATUS: {sol} - DISTANCE: {k}")
-
-        if sol == sat:
-            g = last_sol
-            print("Improved SMT SOLUTION: \n__________________\n")
             for courier in courier_range:
-                t = ""
                 for _time in time_range:
-                    value = sum(package * g.eval(y[courier][package][_time]) for package in package_range)
-                    t += f"{g.eval(value + 1)}, "
-                    to_ret[courier][_time] = g.eval(value + 1).as_long()
-                print(t)
+                    value = sum(package * last_best_sol.eval(y[courier][package][_time]) for package in package_range)
+                    last_solution_matrix[courier][_time] = last_best_sol.eval(value + 1).as_long()
 
-            if to_ret1 is not None:
-                to_ret1.put(k)
-                to_ret2.put(to_ret)
-                to_ret3.put(f"{time() - start_time:.2f}")
-                to_ret4.put(iterations)
-            print("\n__________________\n")
+            model_result["sol"] = last_solution_matrix
+            model_result["time"] = time() - start_time
+            model_result["iterations"] = iterations
+            model_result["min_dist"] = max_distance
+            model_result["optimal"] = False
 
-        if abs(min_distance - max_distance) <= 1:
-            g = last_sol
-            print("Improved SMT SOLUTION: \n__________________\n")
-            for courier in courier_range:
-                t = ""
-                for _time in time_range:
-                    value = sum(package * g.eval(y[courier][package][_time]) for package in package_range)
-                    t += f"{g.eval(value + 1)}, "
-                    to_ret[courier][_time] = g.eval(value + 1).as_long()
-                print(t)
-            print("\n__________________\n")
-
-            return max_distance, to_ret, f"{time() - start_time:.2f}", iterations
-
-        iterations += 1
-        solver.pop()
-
-    return max_distance, "Out of _time", f"{time() - start_time:.2f}", iterations
-
+        if abs(min_distance - max_distance) <= 1 or iterations >= MAXITER:
+            model_result["optimal"] = True
+            return model_result["min_dist"], model_result["sol"], model_result["time"], model_result["iterations"]
+        else:
+            iterations += 1
+            solver.pop()
 
 def calculate_bound_package(m: int, n: int, l: list[int], s: list[int]) -> (int, int):
     """
@@ -311,10 +303,9 @@ def solve_one(instances: list[dict], idx: int, to_ret1: Queue = None, to_ret2: Q
     :return: Solution found, minimized distance, time of computation and number of iterations
     """
     m, n, D, l, s = instances[idx]['m'], instances[idx]['n'], instances[idx]['D'], instances[idx]['l'], \
-                    instances[idx]['s']
+        instances[idx]['s']
 
-    mindist, sol, time_passed, iterations = multiple_couriers(m, n, D, l, s,
-                                                              to_ret1, to_ret2, to_ret3, to_ret4)
+    mindist, sol, time_passed, iterations = multiple_couriers(m, n, D, l, s, {})
     if to_ret1 is not None:
         to_ret1.put(mindist)
         to_ret2.put(sol)
@@ -323,11 +314,21 @@ def solve_one(instances: list[dict], idx: int, to_ret1: Queue = None, to_ret2: Q
     return sol, mindist, time_passed, iterations
 
 
+def solve_one_new(instance: dict, model_result: dict = None) -> dict:
+    if model_result is None:
+        model_result = {}
+
+    m, n, D, l, s = instance['m'], instance['n'], instance['D'], instance['l'], instance['s']
+    multiple_couriers(m, n, D, l, s, model_result=model_result)
+
+    return model_result
+
+
 def main():
-    instances = get_file()
-    _, mindist, t, _ = solve_one(instances, 0)
-    # print(f"Min distance {mindist}")
-    # print(f"Time passed {t}s")
+    instances = get_instances()
+    _, mindist, t, _ = solve_one(instances, 1)
+    print(f"Min distance {mindist}")
+    print(f"Time passed {t}s")
 
 
 if __name__ == "__main__":

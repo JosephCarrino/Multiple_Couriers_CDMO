@@ -1,18 +1,26 @@
 import collections
 
-from mip import Model, minimize, INTEGER, BINARY, xsum, Var
+from mip import Model, minimize, INTEGER, BINARY, xsum, Var, OptimizationStatus
 import itertools
 
 from multiprocess.queues import Queue
 
-from utils.converter import get_file
+from utils.converter import get_instances
 from time import time
 
 EMPH_TO_NAME = {0: "Balanced MIP", 1: "Feasibility MIP", 2: "Optimality MIP"}
 
 
-def solve_multiple_couriers(m: int, n: int, D: list[list[int]], l: list[int], s: list[int],
-                            emph: int = 0) -> (list[list[str]], int):
+def solve_multiple_couriers(
+        m: int,
+        n: int,
+        D: list[list[int]],
+        l: list[int],
+        s: list[int],
+        model_result: dict,
+        emph: int = 0,
+        timeout: int = 300
+) -> (list[list[str]], int):
     """
     SMT solver with just carriabl weights heuristic
     :param m: Number of couriers
@@ -23,8 +31,8 @@ def solve_multiple_couriers(m: int, n: int, D: list[list[int]], l: list[int], s:
     :param emph: Parameter of solver emphasis (Balanced, Feasibility, Optimality)
     :return: Found solution and minimized distance
     """
-    print(f"Couriers: {m}")
-    print(f"Packages: {n}")
+    # print(f"Couriers: {m}")
+    # print(f"Packages: {n}")
 
     # Create the MIP model
     model = Model()
@@ -163,8 +171,10 @@ def solve_multiple_couriers(m: int, n: int, D: list[list[int]], l: list[int], s:
     model.verbose = 0
     model.objective = minimize(d_max)
 
+    start_time = time()
+
     # Solve the MIP model
-    model.optimize(max_seconds=300)
+    model.optimize(max_seconds=timeout) # TODO, TODO change it!!
 
     # Build the solution
     solution = [[base_package
@@ -181,13 +191,22 @@ def solve_multiple_couriers(m: int, n: int, D: list[list[int]], l: list[int], s:
             if z_value != 0:
                 solution[courier][z_value] = p1
 
-    return solution, model.objective_value
+    model_result["sol"] = solution
+    model_result["time"] = time() - start_time
+    model_result["iterations"] = None
+    model_result["min_dist"] = model.objective_value
+    model_result["optimal"] = model.status == OptimizationStatus.OPTIMAL
+
+    return model_result["sol"], model_result["min_dist"]
 
 
-MAXITER = 500
-
-
-def minimizer_binary(instance: dict, solver: any = solve_multiple_couriers, emph: int = 0) -> (list[list[str]], int):
+def minimizer_binary(
+        instance: dict,
+        solver: any = solve_multiple_couriers,
+        emph: int = 0,
+        model_result: dict = None,
+        timeout: int = 300,
+) -> (list[list[str]], int):
     """
     Function for solving an instance using the MIP solver
     :param instance: Instance to solve
@@ -195,13 +214,16 @@ def minimizer_binary(instance: dict, solver: any = solve_multiple_couriers, emph
     :param emph: Emphasis MIP solver parameter
     :return: Found solution and minimized distance
     """
+    if model_result is None:
+        model_result = {}
+
     m = instance["m"]
     n = instance["n"]
     D = instance["D"]
     l = instance["l"]
     s = instance["s"]
 
-    return solver(m, n, D, l, s, emph=emph)
+    return solver(m, n, D, l, s, emph=emph, model_result=model_result, timeout=timeout)
 
 
 def solve_one(instances: list[dict], idx: int, to_ret1: Queue = None, to_ret2: Queue = None,
@@ -219,15 +241,15 @@ def solve_one(instances: list[dict], idx: int, to_ret1: Queue = None, to_ret2: Q
     start_time = time()
     sol, mindist = minimizer_binary(instances[idx], emph=emph)
     time_passed = time() - start_time
-    print(f"TIME: {time_passed} - STATUS: {'sat'} - DISTANCE: {mindist}")
-    print(f"{EMPH_TO_NAME[emph]} SOLUTION: \n__________________\n")
-    for path in sol:
-        for i in range(len(path)):
-            if i != len(path) - 1:
-                print(path[i], end=", ")
-            else:
-                print(path[i])
-    print("\n__________________\n")
+    # print(f"TIME: {time_passed} - STATUS: {'sat'} - DISTANCE: {mindist}")
+    # print(f"{EMPH_TO_NAME[emph]} SOLUTION: \n__________________\n")
+    # for path in sol:
+    #     for i in range(len(path)):
+    #         if i != len(path) - 1:
+    #             print(path[i], end=", ")
+    #         else:
+    #             print(path[i])
+    # print("\n__________________\n")
     if to_ret1 is not None:
         to_ret1.put(mindist)
         to_ret2.put([[int(elem) for elem in path] for path in sol])
@@ -235,18 +257,28 @@ def solve_one(instances: list[dict], idx: int, to_ret1: Queue = None, to_ret2: Q
     return sol, mindist, f"{time_passed:.2f}", iter
 
 
+def solve_one_new(instance: dict,  model_result: dict = None, emph: int = 0, timeout: int = 300) -> dict:
+    if model_result is None:
+        model_result = {}
+
+    minimizer_binary(instance, emph=emph, model_result=model_result, timeout=timeout)
+
+    return model_result
+
 def main():
-    instances = get_file()
+    instances = get_instances()
     instance_number = 0
 
     print(f"Instance {instance_number}")
 
-    _, mindist, t, _ = solve_one(instances, instance_number)
+    results = solve_one_new(instances[instance_number], emph=0)
 
-    print("\n\n\n")
+    print(results)
 
-    print(f"Min distance {mindist}")
-    print(f"Time passed {t}s")
+    # print("\n\n\n")
+    #
+    # print(f"Min distance {mindist}")
+    # print(f"Time passed {t}s")
 
 
 if __name__ == "__main__":

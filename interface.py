@@ -15,7 +15,7 @@ from MIP.run_instances import run_instance as MIP_solve
 from MIP.run_instances import MODELS as MIP_params, NAMES as MIP_names
 
 # Importing instances getter
-from utils.converter import get_file as get_instances
+from utils.converter import get_instances as get_instances
 
 MIN_INSTANCE = 1
 MAX_INSTANCE = 21
@@ -78,8 +78,6 @@ def run_interface():
     strategy_number = int(input())
 
     strategy_name, model = poss[strategy_number][0], poss[strategy_number][1]
-
-    print(f"{method_name=}, {strategy_name=}, {model=}")
 
     print(f"\n--- Choose the instance ---")
     print(f"\n~~ A number between {MIN_INSTANCE} and {MAX_INSTANCE} ~~")

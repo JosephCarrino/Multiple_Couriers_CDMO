@@ -1,11 +1,11 @@
 from MIP.MIP_run import solve_one
-from utils.converter import get_file
+from utils.converter import get_instances
 import multiprocessing
 import json
 import matplotlib.pyplot as plt
 import numpy as np
 
-N_INST: int = 10
+N_INST: int = 2
 
 NAMES: list[str] = ["Balanced MIP", "Feasibility MIP", "Optimality MIP"]
 MODELS = range(3)
@@ -19,7 +19,7 @@ def main():
     The output is a precise format of .json files with found solution, time of computation, minimized distance
     and optimality boolean.
     """
-    instances = get_file()
+    instances = get_instances()
     times = [[] for _ in range(len(MODELS))]
     all_results = []
     for i in range(1, N_INST + 1):

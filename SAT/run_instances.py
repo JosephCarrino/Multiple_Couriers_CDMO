@@ -1,11 +1,11 @@
-from SAT.SAT_run import solve_one
-from utils.converter import get_file
+from SAT.SAT_run_old import solve_one
+from utils.converter import get_instances
 import multiprocessing
 import json
 import matplotlib.pyplot as plt
 import numpy as np
 
-N_INST: int = 10
+N_INST: int = 2
 FONTSIZE = 14
 
 MODELS: list[any] = [solve_one]
@@ -18,12 +18,12 @@ def main():
     The output is a precise format of .json files with found solution, time of computation, minimized distance
     and optimality boolean.
     """
-    instances = get_file()
+    instances = get_instances()
     times = []
     for i in range(1, N_INST + 1):
         results = []
         j = 0
-        to_print = run_instance(i, instances)
+        to_print = run_instance(i, instances, MODELS[0])
         results.append(to_print)
         times.append(to_print["time_passed"][0])
         j += 1
@@ -58,6 +58,9 @@ def run_instance(i: int, instances: list[dict], model: any) -> dict:
     :param instances: List of available instances
     :return: A dictionary with found solution, minimized distance, time of computation and number of iterations
     """
+
+    print(f"Instance n°{i}")
+    # print(f"Instance {instances}")
     timeouted = False
     to_print = {"sol": [], "min_dist": [], "time_passed": [], "iter": []}
     sol = multiprocessing.Queue()
@@ -77,6 +80,7 @@ def run_instance(i: int, instances: list[dict], model: any) -> dict:
     to_print["time_passed"].append(float(time_passed.get()) if not time_passed.empty() and not timeouted else 300)
     to_print["iter"].append(iterations.get() if not iterations.empty() else 0)
     return to_print
+
 
 
 if __name__ == "__main__":

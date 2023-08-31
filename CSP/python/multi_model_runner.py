@@ -5,7 +5,11 @@ import numpy as np
 import json
 import os
 
-INSTANCES_DIR = f"{os.path.abspath(__file__)}\\..\\instances"
+import pathlib
+
+#INSTANCES_DIR = f"{os.path.abspath(__file__)}\\..\\instances"
+INSTANCES_DIR = pathlib.Path(__file__).parent / "instances"
+
 
 MODELS: list[str] = ["../model.mzn",
                      "../dom_deg_min.mzn",
@@ -48,7 +52,11 @@ def specific_runner(number: int, instances: list, model: str) -> (list[list[list
     z = multiprocessing.Queue()
     time = multiprocessing.Queue()
     real_number = "0" + str(number) if number < 10 else str(number)
-    p = multiprocessing.Process(target=get_stats, args=(model, f"{INSTANCES_DIR}\\inst{real_number}.dzn", paths, z, time))
+
+    #p = multiprocessing.Process(target=get_stats, args=(model, f"{INSTANCES_DIR}\\inst{real_number}.dzn", paths, z, time))
+
+    p = multiprocessing.Process(target=get_stats, args=(model, f"{INSTANCES_DIR}/inst{real_number}.dzn", paths, z, time))
+
     p.start()
     p.join(300)
     if p.is_alive():

@@ -1,1 +1,1 @@
-from .converter import get_file
+from .converter import get_instances

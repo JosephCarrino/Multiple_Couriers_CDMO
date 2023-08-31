@@ -1,8 +1,9 @@
 import itertools
+import math
 
-from z3 import *
+from z3 import BoolRef, Or, Not, And, PbLe, Bool, Solver, Implies, sat, Context
 from itertools import combinations
-from utils.converter import get_file
+from utils.converter import get_instances
 from time import time
 
 
@@ -75,7 +76,10 @@ def lex_less_single(a: list[BoolRef], b: list[BoolRef]) -> bool:
     if not a or not b:
         return True
 
-    return Or(less_than(a[0], b[0]), And(equal(a[0], b[0]), lex_less_single(a[1:], b[1:])))
+    return Or(
+        less_than(a[0], b[0]),
+        And(equal(a[0], b[0]), lex_less_single(a[1:], b[1:]))
+    )
 
 
 def lex_less(a: list[list[BoolRef]], b: list[list[BoolRef]]) -> bool:
@@ -91,14 +95,22 @@ def lex_less(a: list[list[BoolRef]], b: list[list[BoolRef]]) -> bool:
     if not b:
         return False
 
-    return Or(lex_less_single(a[0], b[0]), And(a[0] == b[0], lex_less(a[1:], b[1:])))
+    return Or(
+        lex_less_single(a[0], b[0]),
+        And(a[0] == b[0], lex_less(a[1:], b[1:]))
+    )
 
 
 MAXITER = 500
 
 
 def multiple_couriers(
-        m: int, n: int, D: list[list[int]], l: list[int], s: list[int]
+        m: int,
+        n: int,
+        D: list[list[int]],
+        l: list[int],
+        s: list[int],
+        model_result: dict,
 ):
     """
     SAT solver
@@ -124,26 +136,28 @@ def multiple_couriers(
     last_time = time_range[-1]
     variable_coordinates = list(itertools.product(package_range, time_range, courier_range))
 
+    ## Solver ##
+    context = Context()
+    solver = Solver(ctx=context)
+
     ## Variables ##
     # # y[courier][time][package] = True if the courier carries the package at time
-    y = [[[Bool(f"y_{courier}_{_time}_{package}")
+    y = [[[Bool(f"y_{courier}_{_time}_{package}", ctx=context)
            for package in package_range]
           for _time in time_range]
          for courier in courier_range]
 
     # # weights[courier][package] = True if the courier carries the package
-    weights = [[Bool(f"weights_{courier}_{package}")
+    weights = [[Bool(f"weights_{courier}_{package}", ctx=context)
                 for package in package_range]
                for courier in courier_range]
 
     # # distance[courier][start][end] = True if the courier goes from start to end at some time in the route
-    distances = [[[Bool(f"distances_{courier}_{start}_{end}")
+    distances = [[[Bool(f"distances_{courier}_{start}_{end}", ctx=context)
                    # for d in range(D[start][end])]
                    for end in package_range]
                   for start in package_range]
                  for courier in courier_range]
-
-    solver = Solver()
 
     ## Constraints ##
 
@@ -165,7 +179,7 @@ def multiple_couriers(
                     solver.add(
                         Implies(
                             condition,
-                            distances[courier][p1][p2]
+                            distances[courier][p1][p2],
                         )
                     )
 
@@ -177,14 +191,15 @@ def multiple_couriers(
     # Each package is carried only once
     for package in package_range:
         if package != base_package:
-            solver.add(exactly_one([y[courier][_time][package] for courier in courier_range for _time in time_range]))
+            solver.add(
+                exactly_one([y[courier][_time][package] for courier in courier_range for _time in time_range]))
 
     # The total weight carried by each courier must be less or equal than his
     # carriable weight
     for courier in courier_range:
         solver.add(at_most_k_correct(
             [weights[courier][package] for package in package_range for _ in range(s[package])],
-            l[courier],
+            l[courier]
         ))
 
     # At start/end the courier must be at the base
@@ -233,8 +248,8 @@ def multiple_couriers(
 
     start_time = time()
     iterations = 1
-    last_sol = None
-    while iterations < MAXITER:
+    last_best_model = None
+    while True:
         k = int((min_distance + max_distance) / 2)
 
         # Getting the maximum distance
@@ -249,45 +264,44 @@ def multiple_couriers(
 
         sol = solver.check()
 
-        # print(g)
         if sol != sat:
             min_distance = k
         else:
             max_distance = k
-            last_sol = solver.model()
+            last_best_model = solver.model()
 
-        print(f"ITERATION: {iterations} - TIME: {time() - start_time} - STATUS: {sol} - DISTANCE: {k}")
+            # Build the solution matrix and store the intermediate solution
 
-        if abs(min_distance - max_distance) <= 1 or sol == sat:
-            g = last_sol
-
-            print(f"SAT SOLUTION: \n____________________\n")
-            solution_matrix = [[0 for _ in range(last_time + 1)] for _ in range(len(courier_range))]
-
+            last_solution_matrix = [[0 for _ in range(last_time + 1)] for _ in range(len(courier_range))]
             for package, _time, courier in variable_coordinates:
-                if g[y[courier][_time][package]]:
-                    solution_matrix[courier][_time] = package + 1
+                if last_best_model[y[courier][_time][package]]:
+                    last_solution_matrix[courier][_time] = package + 1
 
-            for i in range(len(solution_matrix)):
-                print(f"Courier {i}: {solution_matrix[i]}")
+            model_result["sol"] = last_solution_matrix
+            model_result["time"] = time() - start_time
+            model_result["iterations"] = iterations
+            model_result["min_dist"] = max_distance
+            model_result["optimal"] = False
 
-            if abs(min_distance - max_distance) <= 1:
-                return max_distance, solution_matrix, f"{time() - start_time:.2f}", iterations
+        # If one of the stopping conditions is met, return the solution
+        if abs(min_distance - max_distance) <= 1 or iterations >= MAXITER:
+            model_result["optimal"] = True
+            return model_result["min_dist"], model_result["sol"], model_result["time"], model_result["iterations"]
+        else:
+            iterations += 1
+            solver.pop()
 
-        iterations += 1
-        solver.pop()
 
-    return max_distance, "Out of _time", f"{time() - start_time:.2f}", iterations
+def minimizer_binary(instance, solver=multiple_couriers, maxiter=MAXITER, model_result=None):
+    if model_result is None:
+        model_result = {}
 
-
-def minimizer_binary(instance, solver=multiple_couriers, maxiter=MAXITER):
     m = instance["m"]
     n = instance["n"]
     D = instance["D"]
     l = instance["l"]
     s = instance["s"]
-    print(instance)
-    return solver(m, n, D, l, s)
+    return solver(m, n, D, l, s, model_result=model_result)
 
 
 def solve_one(instances, idx, to_ret1=None, to_ret2=None, to_ret3=None, to_ret4=None):
@@ -302,9 +316,25 @@ def solve_one(instances, idx, to_ret1=None, to_ret2=None, to_ret3=None, to_ret4=
     return sol, mindist, time_passed, iterations
 
 
+def solve_one_new(instance: dict, model_result: dict = None) -> dict:
+    if model_result is None:
+        model_result = {}
+
+    minimizer_binary(instance, model_result=model_result)
+
+    return model_result
+    #
+    # results_dict["sol"] = sol
+    # results_dict["min_dist"] = min_dist
+    # results_dict["time_passed"] = time_passed
+    # results_dict["iter"] = iterations
+    #
+    # return results_dict
+
+
 def main():
-    instances = get_file()
-    _, mindist, t, _ = solve_one(instances, 5)
+    instances = get_instances()
+    _, mindist, t, _ = solve_one(instances, 0)
 
     print("\n\n\n")
 
