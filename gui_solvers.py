@@ -1,5 +1,5 @@
 
-from cmd_interface import run_json_creator, AVAILABLE_MODELS
+from solvers import run_json_creator, AVAILABLE_MODELS
 import pathlib as pl
 
 
