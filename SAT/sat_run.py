@@ -7,33 +7,45 @@ from utils.converter import get_instances
 from time import time
 
 
-def at_least_one(variables: list[BoolRef]):
+def at_least_one(variables: list[BoolRef], context: Context = None):
     """
     Return constraint that at least one of the variables in variables is true
     :param variables: List of variables
+    :param context: Context of the variables
     :return:
     """
 
-    return Or(variables)
+    if context is None:
+        context = variables[0].ctx
+
+    return Or(variables, context)
 
 
-def at_most_one(variables: list[BoolRef]):
+def at_most_one(variables: list[BoolRef], context: Context = None):
     """
     Return constraint that at most one of the variables in variables is true
     :param variables: List of variables
+    :param context: Context of the variables
     :return:
     """
 
-    return [Not(And(pair[0], pair[1])) for pair in combinations(variables, 2)]
+    if context is None:
+        context = variables[0].ctx
+
+    return [Not(And(pair[0], pair[1], context)) for pair in combinations(variables, 2)]
 
 
-def exactly_one(variables: list[BoolRef]):
+def exactly_one(variables: list[BoolRef], context: Context = None):
     """
     Return constraint that exactly one of the variable in variables is true
     :param bool_vars: List of variables
+    :param context: Context of the variables
     """
 
-    return at_most_one(variables) + [at_least_one(variables)]
+    if context is None:
+        context = variables[0].ctx
+
+    return at_most_one(variables, context) + [at_least_one(variables, context)]
 
 
 def at_most_k_correct(variables: list[BoolRef], k: int):
@@ -47,23 +59,29 @@ def at_most_k_correct(variables: list[BoolRef], k: int):
     return PbLe([(var, 1) for var in variables], k)
 
 
-def less_than(a: BoolRef, b: BoolRef):
+def less_than(a: BoolRef, b: BoolRef, context: Context = None):
     """
     Return constraint that a < b
     """
 
-    return And(a, Not(b))
+    if context is None:
+        context = a.ctx
+
+    return And(a, Not(b), context)
 
 
-def equal(a: BoolRef, b: BoolRef):
+def equal(a: BoolRef, b: BoolRef, context: Context = None):
     """
     Return constraint that a == b
     """
 
-    return Or(And(a, b), And(Not(a), Not(b)))
+    if context is None:
+        context = a.ctx
+
+    return Or(And(a, b, context), And(Not(a), Not(b), context), context)
 
 
-def lex_less_single(a: list[BoolRef], b: list[BoolRef]) -> bool:
+def lex_less_single(a: list[BoolRef], b: list[BoolRef], context: Context = None) -> bool:
     """
     Return constraint that a < b in lexicographic order:
     a := a_1, ..., a_n
@@ -71,22 +89,28 @@ def lex_less_single(a: list[BoolRef], b: list[BoolRef]) -> bool:
     a_1 < b_1 or (a_1 == b_1 and lex_less_single(a_2...a_n, b_2...b_n))
     :param a: list of bools
     :param b: list of bools
+    :param context: Context of the variables
     :return:
     """
     if not a or not b:
         return True
 
+    if context is None:
+        context = a[0].ctx
+
     return Or(
-        less_than(a[0], b[0]),
-        And(equal(a[0], b[0]), lex_less_single(a[1:], b[1:]))
+        less_than(a[0], b[0], context),
+        And(equal(a[0], b[0], context), lex_less_single(a[1:], b[1:], context), context),
+        context
     )
 
 
-def lex_less(a: list[list[BoolRef]], b: list[list[BoolRef]]) -> bool:
+def lex_less(a: list[list[BoolRef]], b: list[list[BoolRef]], context: Context = None) -> bool:
     """
     Return constraint that a < b in lexicographic order:
     :param a: List of lists of bools where each sublist is the encoding of a number
     :param b: List of lists of bools where each sublist is the encoding of a number
+    :param context: Context of the variables
     :return:
     """
 
@@ -95,9 +119,13 @@ def lex_less(a: list[list[BoolRef]], b: list[list[BoolRef]]) -> bool:
     if not b:
         return False
 
+    if context is None:
+        context = a[0][0].ctx
+
     return Or(
-        lex_less_single(a[0], b[0]),
-        And(a[0] == b[0], lex_less(a[1:], b[1:]))
+        lex_less_single(a[0], b[0], context),
+        And(a[0] == b[0], lex_less(a[1:], b[1:], context), context),
+        context
     )
 
 
@@ -316,7 +344,7 @@ def solve_one(instances, idx, to_ret1=None, to_ret2=None, to_ret3=None, to_ret4=
     return sol, mindist, time_passed, iterations
 
 
-def solve_one_new(instance: dict, model_result: dict = None) -> dict:
+def solve_one_new(instance: dict, instance_index: int, model_result: dict = None) -> dict:
     if model_result is None:
         model_result = {}
 

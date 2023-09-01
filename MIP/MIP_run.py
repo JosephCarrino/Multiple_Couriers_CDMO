@@ -257,7 +257,7 @@ def solve_one(instances: list[dict], idx: int, to_ret1: Queue = None, to_ret2: Q
     return sol, mindist, f"{time_passed:.2f}", iter
 
 
-def solve_one_new(instance: dict,  model_result: dict = None, emph: int = 0, timeout: int = 300) -> dict:
+def solve_one_new(instance: dict, instance_index: int, model_result: dict = None, emph: int = 0, timeout: int = 300) -> dict:
     if model_result is None:
         model_result = {}
 

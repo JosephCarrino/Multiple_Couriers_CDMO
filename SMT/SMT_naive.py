@@ -6,45 +6,58 @@ from utils.converter import get_instances
 MAXITER: int = 50
 
 
-def array_max(vs: list) -> int:
+def array_max(vs: list, context: Context = None) -> int:
     """
     Function for finding max in an array
     :param vs: Input array
     :return: Max element of vs
     """
     m = vs[0]
+
+    if context is None:
+        context = m.ctx
+
     for _v in vs[1:]:
-        m = If(_v > m, _v, m)
+        m = If(_v > m, _v, m, ctx=context)
     return m
 
 
-def lex_less(a: list[list], b: list[list]) -> bool:
-    """
-    Function for detecting lexicographic order between two strings
-    :param a: First string
-    :param b: Second string
-    :return: True if 'a' is ordered before 'b', False otherwise
-    """
-    if not a:
-        return True
-    if not b:
-        return False
-    return Or(a[0] <= b[0], And(a[0] == b[0], lex_less(a[1:], b[1:])))
+# def lex_less(a: list[list], b: list[list]) -> bool:
+#     """
+#     Function for detecting lexicographic order between two strings
+#     :param a: First string
+#     :param b: Second string
+#     :return: True if 'a' is ordered before 'b', False otherwise
+#     """
+#     if not a:
+#         return True
+#     if not b:
+#         return False
+#     return Or(a[0] <= b[0], And(a[0] == b[0], lex_less(a[1:], b[1:])))
 
 
-def lex_less_single(a: list[list], b: list[list]) -> bool:
+def lex_less_single(a: list[list], b: list[list], context: Context = None) -> bool:
     if not a or not b:
         return True
 
-    return Or(a[0] <= b[0], And(a[0] == b[0], lex_less_single(a[1:], b[1:])))
+    if context is None:
+        context = a[0].ctx
+
+    return Or(a[0] <= b[0], And(a[0] == b[0], lex_less_single(a[1:], b[1:], context), context), context)
 
 
-def lex_less_no_conversion(a: list[list], b: list[list]) -> bool:
+def lex_less_no_conversion(a: list[list], b: list[list], context: Context = None) -> bool:
     if not a:
         return True
     if not b:
         return False
-    return Or(lex_less_single(a[0], b[0]), And(a[0] == b[0], lex_less_no_conversion(a[1:], b[1:])))
+
+    if context is None:
+        context = a[0][0].ctx
+
+    # Added the last term because sometimes the And was from a different context
+    return Or(lex_less_single(a[0], b[0], context),
+              And(a[0] == b[0], lex_less_no_conversion(a[1:], b[1:], context), context), context)
 
 
 def multiple_couriers(
@@ -280,7 +293,7 @@ def solve_one(instances: list[dict], idx: int, to_ret1: Queue = None, to_ret2: Q
     return sol, mindist, time_passed, iterations
 
 
-def solve_one_new(instance: dict, model_result: dict = None) -> dict:
+def solve_one_new(instance: dict, instance_index: int, model_result: dict = None) -> dict:
     if model_result is None:
         model_result = {}
 

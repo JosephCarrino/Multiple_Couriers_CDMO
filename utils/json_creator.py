@@ -9,6 +9,7 @@ from SAT.sat_run import solve_one_new as sat_solver
 from MIP.MIP_run import solve_one_new as mip_solver
 from SMT.SMTordinecorretto import solve_one_new as smt_correct_solver
 from SMT.SMT_naive import solve_one_new as smt_naive_solver
+from CSP.csp_run import solve_one_new as csp_solver
 
 from functools import partial
 
@@ -16,7 +17,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 AVAILABLE_MODELS = ["SAT", "NaiveSMT", "FixedSMT", "BalancedMIP", "FeasibilityMIP", "OptimalityMIP",
-                    "CSP", "Dom_w_degCSP", "Dom_w_degCSP"]
+                    "CSP", "DomDegMinCSP", "DomDegRandCSP"]
 
 
 def get_model_from_name(model_name: str) -> Callable[[dict, dict], dict]:
@@ -37,11 +38,26 @@ def get_model_from_name(model_name: str) -> Callable[[dict, dict], dict]:
     elif model_name == "OptimalityMIP":
         return partial(mip_solver, emph=2, timeout=300)
     elif model_name == "CSP":
-        raise NotImplementedError()
-    elif model_name == "Dom_w_degCSP":
-        raise NotImplementedError()
-    elif model_name == "Dom_w_degCSP":
-        raise NotImplementedError()
+        return partial(csp_solver,
+                       model_path=pl.Path("CSP/model.mzn"),
+                       instance_folder_path=pl.Path("CSP/instances"),
+                       solver="Gecode",
+                       timeout=30_000,
+                       )
+    elif model_name == "DomDegMinCSP":
+        return partial(csp_solver,
+                       model_path=pl.Path("CSP/dom_deg_min.mzn"),
+                       instance_folder_path=pl.Path("CSP/instances"),
+                       solver="Gecode",
+                       timeout=30_000,
+                       )
+    elif model_name == "DomDegRandCSP":
+        return partial(csp_solver,
+                       model_path=pl.Path("CSP/dom_deg_rand.mzn"),
+                       instance_folder_path=pl.Path("CSP/instances"),
+                       solver="Gecode",
+                       timeout=30_000,
+                       )
     else:
         raise ValueError(f"Model {model_name} not found")
 
@@ -57,7 +73,7 @@ def get_out_folder_for_model(model_name: str, result_folder: pl.Path) -> pl.Path
         return result_folder / "SMT"
     elif model_name in ["BalancedMIP", "FeasibilityMIP", "OptimalityMIP"]:
         return result_folder / "MIP"
-    elif model_name in ["CSP", "Dom_w_degCSP", "Dom_w_degCSP"]:
+    elif model_name in ["CSP", "DomDegMinCSP", "DomDegRandCSP"]:
         return result_folder / "CSP"
     else:
         raise ValueError(f"Model {model_name} not found")
@@ -71,7 +87,7 @@ def get_process_timeout(model_name: str) -> int:
     """
 
     # These models have already a timeout in their optimizer and we don't want to have a timeout in the process
-    if model_name in ["BalancedMIP", "FeasibilityMIP", "OptimalityMIP"]:
+    if model_name in ["BalancedMIP", "FeasibilityMIP", "OptimalityMIP", "CSP", "DomDegMinCSP", "DomDegRandCSP"]:
         return 10 ** 6
     else:
         return 300

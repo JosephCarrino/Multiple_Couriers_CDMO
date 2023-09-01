@@ -3,7 +3,7 @@ import threading
 from typing import Callable
 from functools import partial
 
-model_type = Callable[[dict, dict], dict]
+model_type = Callable[[dict, int, dict], dict]
 
 
 def run_instances_multiprocessing(
@@ -84,7 +84,7 @@ def run_instance(
     }
 
     # Start a thread that run the model and terminate it after timeout seconds
-    thread = threading.Thread(target=model, args=(instance, model_result), kwargs=model_kwargs)
+    thread = threading.Thread(target=model, args=(instance, instance_index, model_result), kwargs=model_kwargs)
     thread.start()
     thread.join(timeout=timeout)
 
