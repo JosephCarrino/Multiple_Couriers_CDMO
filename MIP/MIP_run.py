@@ -173,6 +173,8 @@ def solve_multiple_couriers(
 
     start_time = time()
 
+    model_result["ready"] = True
+
     # Solve the MIP model
     model.optimize(max_seconds=timeout) # TODO, TODO change it!!
 

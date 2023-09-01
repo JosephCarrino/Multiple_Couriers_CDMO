@@ -290,6 +290,8 @@ def multiple_couriers(
 
             solver.add(at_most_k_correct(courier_dist, k))
 
+        model_result["ready"] = True
+
         sol = solver.check()
 
         if sol != sat:

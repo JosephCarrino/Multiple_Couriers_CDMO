@@ -1,9 +1,10 @@
 import pathlib as pl
 import os
 import json
+import time
 
 
-def minizinc_solution_parser(solution_json: dict, model_result: dict = None) -> dict:
+def minizinc_solution_parser(solution_json: dict, time_passed: int, model_result: dict = None) -> dict:
     """
     Parse a solution from a JSON object
     """
@@ -12,8 +13,15 @@ def minizinc_solution_parser(solution_json: dict, model_result: dict = None) -> 
         model_result = {}
 
     model_result["iterations"] = None
-    model_result["time"] = solution_json["time"]
-    model_result["optimal"] = None
+    # print(f"Before int cast {solution_json['time']=}")
+    # model_result["time"] = int(solution_json["time"]) / 1000
+    # print(f"{solution_json['time']=}")
+    model_result["time"] = time_passed
+    print(f"{model_result['time']=}")
+
+    model_result["optimal"] = model_result["time"] < 300  # TODO hardcoded timeoutù
+    print(f"{model_result['optimal']=}")
+
     model_result["min_dist"] = None
 
     # Get the solution
@@ -34,30 +42,47 @@ def minizinc_solution_parser(solution_json: dict, model_result: dict = None) -> 
     return model_result
 
 
-def minizinc_output_parser(output_strings: list[str], model_result: dict = None) -> dict:
+def minizinc_output_parser(
+        output_strings: list[str],
+        model_result: dict = None,
+) -> dict:
     """
     Parse the output of a minizinc run
     :param output_strings: The list of strings containing the output of the minizinc run
     :return: A dictionary containing the information about the best solution
     """
 
+    # print(f"{output_strings=}")
+
     data = []
     for output_string in output_strings:
-        print(f"{output_string=}")
+        # print(f"{output_string=}")
         try:
             data.append(json.loads(output_string))
         except json.JSONDecodeError:
             pass
 
-    print(f"{data=}")
-
     # There are more then one solution since we are using the --intermediate flag
     solutions = [d for d in data if d["type"] == "solution"]
+
+    if len(solutions) == 0:
+        print(f"No solution found {output_strings=}")
+        return {"iterations": None, "time": None, "optimal": False, "min_dist": None, "sol": None}
+
+    statuses = [d for d in data if d["type"] == "status"]
+    status_optimal = [s for s in statuses if s["status"] == "OPTIMAL_SOLUTION"]
+
+    print(f"{statuses=}")
+
+    if len(status_optimal) == 0:
+        time_passed = 300
+    else:
+        time_passed = int(status_optimal[-1]["time"]) / 1000
 
     # The best is the last one
     best_solution = solutions[-1]
 
-    return minizinc_solution_parser(best_solution, model_result)
+    return minizinc_solution_parser(best_solution, time_passed, model_result)
 
 
 def solve_one_new(
@@ -67,9 +92,9 @@ def solve_one_new(
         model_path: pl.Path = pl.Path("CSP/model.mzn"),
         instance_folder_path: pl.Path = pl.Path("CSP/instances"),
         solver: str = "Gecode",
-        timeout: int = 30_000,
+        timeout: int = 300 * 1000,
 ) -> dict:
-    instance_index_str = str(instance_index + 1).zfill(2)
+    instance_index_str = str(instance_index).zfill(2)
     instance_path = instance_folder_path / f"inst{instance_index_str}.dzn"
 
     # Run the model
@@ -78,7 +103,7 @@ def solve_one_new(
         f"{model_path}",
         f"{instance_path}",
         f"-p {1}",
-        f"--time-limit {timeout}",
+        f"--solver-time-limit  {timeout}",  # Only for solving
         "--json-stream",
         "--output-time",
         "--intermediate",
@@ -86,8 +111,10 @@ def solve_one_new(
 
     cmd = "minizinc " + " ".join(minizinc_cmd_args)
 
-    print(f"Running cmd {cmd}")
+    model_result["ready"] = True
+    # print(f"Running cmd {cmd}")
     output = os.popen(cmd).readlines()
 
     # Parse the output
-    return minizinc_output_parser(output, model_result)
+    return minizinc_output_parser(output,
+                                  model_result)

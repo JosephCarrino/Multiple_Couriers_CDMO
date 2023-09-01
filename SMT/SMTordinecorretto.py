@@ -239,6 +239,7 @@ def multiple_couriers(
         solver.push()
         solver.add(objective_value <= k)
 
+        model_result["ready"] = True
         sol = solver.check()
 
         if sol != sat:

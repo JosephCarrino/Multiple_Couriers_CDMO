@@ -42,21 +42,21 @@ def get_model_from_name(model_name: str) -> Callable[[dict, dict], dict]:
                        model_path=pl.Path("CSP/model.mzn"),
                        instance_folder_path=pl.Path("CSP/instances"),
                        solver="Gecode",
-                       timeout=30_000,
+                       timeout=300 * 1000,
                        )
     elif model_name == "DomDegMinCSP":
         return partial(csp_solver,
                        model_path=pl.Path("CSP/dom_deg_min.mzn"),
                        instance_folder_path=pl.Path("CSP/instances"),
                        solver="Gecode",
-                       timeout=30_000,
+                       timeout=300 * 1000,
                        )
     elif model_name == "DomDegRandCSP":
         return partial(csp_solver,
                        model_path=pl.Path("CSP/dom_deg_rand.mzn"),
                        instance_folder_path=pl.Path("CSP/instances"),
                        solver="Gecode",
-                       timeout=30_000,
+                       timeout=300 * 1000,
                        )
     else:
         raise ValueError(f"Model {model_name} not found")
@@ -174,7 +174,7 @@ def run_json_creator(
     all_instances = get_instances()
 
     if instances_str == "all":
-        instances_number = list(range(len(all_instances)))
+        instances_number = list(range(1, len(all_instances) + 1))
     else:
         instances_number = [int(i) for i in instances_str.split(",")]
 
@@ -194,7 +194,7 @@ def run_json_creator(
         selected_instances = [all_instances[i - 1] for i in instances_number]
         process_timeout = get_process_timeout(model_name)
 
-        results = run_instances_multiprocessing(selected_instances, model_str, max_process=max_process,
+        results = run_instances_multiprocessing(selected_instances, instances_number, model_str, max_process=max_process,
                                                 timeout=process_timeout)
 
         print("\n")
