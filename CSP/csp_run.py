@@ -92,6 +92,7 @@ def solve_one_new(
         model_path: pl.Path = pl.Path("CSP/model.mzn"),
         instance_folder_path: pl.Path = pl.Path("CSP/instances"),
         solver: str = "Gecode",
+        symmetry_breaking: bool = True,
         timeout: int = 300 * 1000,
 ) -> dict:
     instance_index_str = str(instance_index).zfill(2)
@@ -107,9 +108,12 @@ def solve_one_new(
         "--json-stream",
         "--output-time",
         "--intermediate",
+        f"{'-D mzn_ignore_symmetry_breaking_constraints=true' if not symmetry_breaking else ''}"
     ]
 
     cmd = "minizinc " + " ".join(minizinc_cmd_args)
+
+    print(f"Running cmd {cmd}")
 
     model_result["ready"] = True
     # print(f"Running cmd {cmd}")
