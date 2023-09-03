@@ -1,0 +1,50 @@
+{
+    "CSP": {
+        "time": 300,
+        "optimal": null,
+        "obj": 0,
+        "sol": [
+            [],
+            [],
+            [],
+            [],
+            []
+        ]
+    },
+    "DomDegMinCSP": {
+        "time": 300,
+        "optimal": null,
+        "obj": 0,
+        "sol": [
+            [],
+            [],
+            [],
+            [],
+            []
+        ]
+    },
+    "DomDegRandCSP": {
+        "time": 300,
+        "optimal": null,
+        "obj": 0,
+        "sol": [
+            [],
+            [],
+            [],
+            [],
+            []
+        ]
+    },
+    "CSPnoSB": {
+        "time": 300,
+        "optimal": null,
+        "obj": 0,
+        "sol": [
+            [],
+            [],
+            [],
+            [],
+            []
+        ]
+    }
+}

@@ -1,61 +1,67 @@
 {
-    "Balanced MIP": {
-        "time": 7,
+    "BalancedMIP": {
+        "time": 2,
         "optimal": true,
-        "obj": 12.0,
+        "obj": 12,
         "sol": [
             [
-                3,
-                6,
-                5
-            ],
-            [
                 2,
+                5,
                 4
             ],
             [
                 1,
-                7
+                3,
+                0
+            ],
+            [
+                0,
+                6,
+                5
             ]
         ]
     },
-    "Feasibility MIP": {
-        "time": 7,
+    "FeasibilityMIP": {
+        "time": 2,
         "optimal": true,
-        "obj": 12.0,
+        "obj": 12,
         "sol": [
             [
-                3,
-                6,
-                5
-            ],
-            [
                 2,
+                5,
                 4
             ],
             [
                 1,
-                7
+                3,
+                0
+            ],
+            [
+                0,
+                6,
+                5
             ]
         ]
     },
-    "Optimality MIP": {
-        "time": 8,
+    "OptimalityMIP": {
+        "time": 2,
         "optimal": true,
-        "obj": 12.0,
+        "obj": 12,
         "sol": [
             [
-                3,
-                6,
-                5
-            ],
-            [
                 2,
+                5,
                 4
             ],
             [
                 1,
-                7
+                3,
+                0
+            ],
+            [
+                0,
+                6,
+                5
             ]
         ]
     }

@@ -3,7 +3,7 @@ import pathlib as pl
 import numpy as np
 import matplotlib.pyplot as plt
 
-results_dir = pl.Path('resultsCmd')
+results_dir = pl.Path('res')
 
 def make_graph(model):
 

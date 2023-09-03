@@ -1,19 +1,5 @@
 {
-    "Default Model": {
-        "time": 1,
-        "optimal": true,
-        "obj": 206,
-        "sol": [
-            [
-                2
-            ],
-            [
-                1,
-                3
-            ]
-        ]
-    },
-    "Dom_w_deg, Indomain_min": {
+    "CSP": {
         "time": 0,
         "optimal": true,
         "obj": 206,
@@ -27,7 +13,35 @@
             ]
         ]
     },
-    "Dom_w_deg, Indomain_rand": {
+    "DomDegMinCSP": {
+        "time": 0,
+        "optimal": true,
+        "obj": 206,
+        "sol": [
+            [
+                2
+            ],
+            [
+                1,
+                3
+            ]
+        ]
+    },
+    "DomDegRandCSP": {
+        "time": 0,
+        "optimal": true,
+        "obj": 206,
+        "sol": [
+            [
+                2
+            ],
+            [
+                1,
+                3
+            ]
+        ]
+    },
+    "CSPnoSB": {
         "time": 0,
         "optimal": true,
         "obj": 206,

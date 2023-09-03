@@ -1,0 +1,41 @@
+{
+    "BalancedMIP": {
+        "time": 300,
+        "optimal": false,
+        "obj": 0,
+        "sol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+        ]
+    },
+    "FeasibilityMIP": {
+        "time": 300,
+        "optimal": false,
+        "obj": 0,
+        "sol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+        ]
+    },
+    "OptimalityMIP": {
+        "time": 300,
+        "optimal": false,
+        "obj": 0,
+        "sol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+        ]
+    }
+}

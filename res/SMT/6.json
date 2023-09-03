@@ -1,28 +1,54 @@
 {
-    "Naive SMT": {
-        "time": 0,
+    "FixedSMT": {
+        "time": 2,
         "optimal": true,
-        "obj": 268,
+        "obj": 322,
         "sol": [
+            [
+                7,
+                8
+            ],
+            [
+                6
+            ],
+            [
+                5,
+                4
+            ],
             [
                 2
             ],
             [
-                3,
                 1
+            ],
+            [
+                3
             ]
         ]
     },
-    "Fixed SMT": {
-        "time": 0,
+    "NaiveSMT": {
+        "time": 28,
         "optimal": true,
-        "obj": 268,
+        "obj": 322,
         "sol": [
+            [
+                8
+            ],
+            [
+                6,
+                7
+            ],
+            [
+                5
+            ],
+            [
+                4,
+                3
+            ],
             [
                 2
             ],
             [
-                3,
                 1
             ]
         ]

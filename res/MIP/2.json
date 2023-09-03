@@ -1,20 +1,95 @@
 {
-    "Balanced MIP": {
+    "BalancedMIP": {
         "time": 300,
         "optimal": false,
-        "obj": 0,
-        "sol": "Unsat"
+        "obj": 226,
+        "sol": [
+            [
+                6,
+                1,
+                7
+            ],
+            [
+                4,
+                6
+            ],
+            [
+                8
+            ],
+            [
+                2
+            ],
+            [
+                7,
+                5,
+                6
+            ],
+            [
+                0,
+                3
+            ]
+        ]
     },
-    "Feasibility MIP": {
+    "FeasibilityMIP": {
         "time": 300,
         "optimal": false,
-        "obj": 0,
-        "sol": "Unsat"
+        "obj": 226,
+        "sol": [
+            [
+                6,
+                1,
+                7
+            ],
+            [
+                4,
+                6
+            ],
+            [
+                8
+            ],
+            [
+                2
+            ],
+            [
+                7,
+                5,
+                6
+            ],
+            [
+                0,
+                3
+            ]
+        ]
     },
-    "Optimality MIP": {
+    "OptimalityMIP": {
         "time": 300,
         "optimal": false,
-        "obj": 0,
-        "sol": "Unsat"
+        "obj": 226,
+        "sol": [
+            [
+                6,
+                1,
+                7
+            ],
+            [
+                4,
+                6
+            ],
+            [
+                8
+            ],
+            [
+                2
+            ],
+            [
+                7,
+                5,
+                6
+            ],
+            [
+                0,
+                3
+            ]
+        ]
     }
 }

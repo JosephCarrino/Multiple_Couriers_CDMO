@@ -1,5 +1,5 @@
 {
-    "Default Model": {
+    "CSP": {
         "time": 0,
         "optimal": true,
         "obj": 14,
@@ -16,7 +16,7 @@
             ]
         ]
     },
-    "Dom_w_deg, Indomain_min": {
+    "DomDegMinCSP": {
         "time": 0,
         "optimal": true,
         "obj": 14,
@@ -33,7 +33,24 @@
             ]
         ]
     },
-    "Dom_w_deg, Indomain_rand": {
+    "DomDegRandCSP": {
+        "time": 0,
+        "optimal": true,
+        "obj": 14,
+        "sol": [
+            [
+                4,
+                3,
+                1
+            ],
+            [
+                2,
+                5,
+                6
+            ]
+        ]
+    },
+    "CSPnoSB": {
         "time": 0,
         "optimal": true,
         "obj": 14,
