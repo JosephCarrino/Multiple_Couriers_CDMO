@@ -1,1 +1,1 @@
-from .MIP_run import solve_one
+from .MIP_model import solve_one

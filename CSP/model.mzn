@@ -67,7 +67,7 @@ constraint forall(i in 1..m)(
 % If a courier can take a package, he will
 constraint forall(c1 in 1..m)
   (
-  (l[c1] >= min(s)) -> exists(k in 1..n+1)(c[c1,k] != n+1));
+  (l[c1] >= max(s)) -> exists(k in 1..n+1)(c[c1,k] != n+1));
 
 
 % Symmetry breaking 

@@ -11,7 +11,7 @@ if __name__ == "__main__":
                         help='Name of the model or models (separated by a comma) to run or the string "all". Possible models are: ' + ", ".join(AVAILABLE_MODELS),
                         default=AVAILABLE_MODELS[0])
     parser.add_argument('--max_process', type=int, default=4, help='Maximum number of process to run in parallel')
-    parser.add_argument('--result_folder', type=pl.Path, default=pl.Path("resultsCmd"),
+    parser.add_argument('--result_folder', type=pl.Path, default=pl.Path("res"),
                         help='Folder where to save the results')
 
     parser.add_argument('--build_plot', action="store_true", help='If True, build a plot with the results for each model')

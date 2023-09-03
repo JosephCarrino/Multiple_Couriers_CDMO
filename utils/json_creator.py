@@ -5,11 +5,11 @@ from typing import Callable
 from utils.mulitprocessing_execution import run_instances_multiprocessing
 from utils import get_instances
 
-from SAT.sat_run import solve_one_new as sat_solver
-from MIP.MIP_run import solve_one_new as mip_solver
-from SMT.SMTordinecorretto import solve_one_new as smt_correct_solver
+from SAT.SAT_model import solve_one_new as sat_solver
+from MIP.MIP_model import solve_one_new as mip_solver
+from SMT.STM_fixed import solve_one_new as smt_correct_solver
 from SMT.SMT_naive import solve_one_new as smt_naive_solver
-from CSP.csp_run import solve_one_new as csp_solver
+from CSP.CSP_model import solve_one_new as csp_solver
 
 from functools import partial
 
