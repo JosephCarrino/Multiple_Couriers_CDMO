@@ -259,31 +259,7 @@ def calculate_bound_package(m: int, n: int, l: list[int], s: list[int]) -> (int,
     return upper_bound, lower_bound
 
 
-def solve_one(instances: list[dict], idx: int, to_ret1: Queue = None, to_ret2: Queue = None,
-              to_ret3: Queue = None, to_ret4: Queue = None) -> (list[list[str]], int, float, int):
-    """
-    Function for actually using the solver on one given instance
-    :param instances: List of available instances
-    :param idx: Index of desired instance
-    :param to_ret1: Queue for returning minimized distance
-    :param to_ret2: Queue for returning found solution
-    :param to_ret3: Queue for returning time of computation
-    :param to_ret4: Queue for returning iterations number
-    :return: Solution found, minimized distance, time of computation and number of iterations
-    """
-    m, n, D, l, s = instances[idx]['m'], instances[idx]['n'], instances[idx]['D'], instances[idx]['l'], \
-        instances[idx]['s']
-
-    mindist, sol, time_passed, iterations = multiple_couriers(m, n, D, l, s, {})
-    if to_ret1 is not None:
-        to_ret1.put(mindist)
-        to_ret2.put(sol)
-        to_ret3.put(time_passed)
-        to_ret4.put(iterations)
-    return sol, mindist, time_passed, iterations
-
-
-def solve_one_new(instance: dict, instance_index: int, model_result: dict = None) -> dict:
+def solve_one(instance: dict, instance_index: int, model_result: dict = None) -> dict:
     if model_result is None:
         model_result = {}
 
@@ -291,14 +267,3 @@ def solve_one_new(instance: dict, instance_index: int, model_result: dict = None
     multiple_couriers(m, n, D, l, s, model_result=model_result)
 
     return model_result
-
-
-def main():
-    instances = get_instances()
-    _, mindist, t, _ = solve_one(instances, 0)
-    print(f"Min distance {mindist}")
-    print(f"Time passed {t}s")
-
-
-if __name__ == "__main__":
-    main()

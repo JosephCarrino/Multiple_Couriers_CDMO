@@ -153,22 +153,22 @@ def multiple_couriers(
     # So that the package representing the base doesn't count in the weight calculation
     s += [0]
 
-    ## Ranges ##
+    ### Ranges ###
     package_range = range(n + 1)
     time_range = range(n + 2)
     time_range_no_zero = range(1, time_range[-1] + 1)
     courier_range = range(m)
 
-    ## Constant ##
+    ### Constant ###
     base_package = n
     last_time = time_range[-1]
     variable_coordinates = list(itertools.product(package_range, time_range, courier_range))
 
-    ## Solver ##
+    ### Solver ###
     context = Context()
     solver = Solver(ctx=context)
 
-    ## Variables ##
+    ### Variables ###
     # # y[courier][time][package] = True if the courier carries the package at time
     y = [[[Bool(f"y_{courier}_{_time}_{package}", ctx=context)
            for package in package_range]
@@ -187,7 +187,7 @@ def multiple_couriers(
                   for start in package_range]
                  for courier in courier_range]
 
-    ## Constraints ##
+    ### Constraints ###
 
     # Binding the weights
     for courier in courier_range:
@@ -235,7 +235,7 @@ def multiple_couriers(
         solver.add(y[courier][0][base_package])
         solver.add(y[courier][last_time][base_package])
 
-    ## Optimization ##
+    ### Optimization ###
 
     # Couriers must immediately start with a package after the base if they carry a package
     for courier in courier_range:
@@ -254,14 +254,14 @@ def multiple_couriers(
                 b = y[courier][_time2][base_package]
                 solver.add(Implies(a, b))
 
-    ## Breaking Symmetry ##
+    ### Breaking Symmetry ###
     # Lexicographic order for each courier
     for c1 in courier_range:
         for c2 in courier_range:
             if c1 < c2 and l[c1] == l[c2]:
                 solver.add(lex_less(y[c1], y[c2]))
 
-    ## Objective function ##
+    ### Objective function ###
 
     # Getting minimum and maximum distance
     min_distance = math.inf
@@ -334,43 +334,10 @@ def minimizer_binary(instance, solver=multiple_couriers, maxiter=MAXITER, model_
     return solver(m, n, D, l, s, model_result=model_result)
 
 
-def solve_one(instances, idx, to_ret1=None, to_ret2=None, to_ret3=None, to_ret4=None):
-    mindist, sol, time_passed, iterations = minimizer_binary(instances[idx])
-
-    if to_ret1 is not None:
-        to_ret1.put(mindist)
-        to_ret2.put(sol)
-        to_ret3.put(time_passed)
-        to_ret4.put(iterations)
-
-    return sol, mindist, time_passed, iterations
-
-
-def solve_one_new(instance: dict, instance_index: int, model_result: dict = None) -> dict:
+def solve_one(instance: dict, instance_index: int, model_result: dict = None) -> dict:
     if model_result is None:
         model_result = {}
 
     minimizer_binary(instance, model_result=model_result)
 
     return model_result
-    #
-    # results_dict["sol"] = sol
-    # results_dict["min_dist"] = min_dist
-    # results_dict["time_passed"] = time_passed
-    # results_dict["iter"] = iterations
-    #
-    # return results_dict
-
-
-def main():
-    instances = get_instances()
-    _, mindist, t, _ = solve_one(instances, 0)
-
-    print("\n\n\n")
-
-    print(f"Min distance {mindist}")
-    print(f"Time passed {t}s")
-
-
-if __name__ == "__main__":
-    main()

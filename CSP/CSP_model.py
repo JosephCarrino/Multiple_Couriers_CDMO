@@ -52,11 +52,8 @@ def minizinc_output_parser(
     :return: A dictionary containing the information about the best solution
     """
 
-    # print(f"{output_strings=}")
-
     data = []
     for output_string in output_strings:
-        # print(f"{output_string=}")
         try:
             data.append(json.loads(output_string))
         except json.JSONDecodeError:
@@ -66,13 +63,10 @@ def minizinc_output_parser(
     solutions = [d for d in data if d["type"] == "solution"]
 
     if len(solutions) == 0:
-        print(f"No solution found {output_strings=}")
         return {"iterations": None, "time": None, "optimal": False, "min_dist": None, "sol": None}
 
     statuses = [d for d in data if d["type"] == "status"]
     status_optimal = [s for s in statuses if s["status"] == "OPTIMAL_SOLUTION"]
-
-    print(f"{statuses=}")
 
     if len(status_optimal) == 0:
         time_passed = 300
@@ -85,7 +79,7 @@ def minizinc_output_parser(
     return minizinc_solution_parser(best_solution, time_passed, model_result)
 
 
-def solve_one_new(
+def solve_one(
         instance: dict,
         instance_index: int,
         model_result: dict = None,
@@ -113,10 +107,7 @@ def solve_one_new(
 
     cmd = "minizinc " + " ".join(minizinc_cmd_args)
 
-    print(f"Running cmd {cmd}")
-
     model_result["ready"] = True
-    # print(f"Running cmd {cmd}")
     output = os.popen(cmd).readlines()
 
     # Parse the output
