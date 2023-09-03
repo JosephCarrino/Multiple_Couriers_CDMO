@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 AVAILABLE_MODELS = ["SAT", "NaiveSMT", "FixedSMT", "BalancedMIP", "FeasibilityMIP", "OptimalityMIP",
-                    "CSP", "DomDegMinCSP", "DomDegRandCSP", "CSPnoSB", "DomDegMinCSPnoSB", "DomDegRandCSPnoSB"]
+                    "CSP", "DomDegMinCSP", "DomDegRandCSP", "CSPnoSB"]
 
 
 def get_model_from_name(model_name: str) -> Callable[[dict, dict], dict]:
@@ -112,7 +112,7 @@ def get_process_timeout(model_name: str) -> int:
 
     # These models have already a timeout in their optimizer and we don't want to have a timeout in the process
     if model_name in ["BalancedMIP", "FeasibilityMIP", "OptimalityMIP", "CSP", "DomDegMinCSP", "DomDegRandCSP", "CSPnoSB", "DomDegMinCSPnoSB", "DomDegRandCSPnoSB"]:
-        return 10 ** 6
+        return 600
     else:
         return 300
 

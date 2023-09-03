@@ -123,7 +123,7 @@ def solve_multiple_couriers(
                        for p in package_range]
                       for courier in courier_range]
 
-    # Link between y and z
+    # Link between y and path_increment
     for courier in courier_range:
         path_increment[courier][base_package] = 0
 

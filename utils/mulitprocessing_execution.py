@@ -99,7 +99,9 @@ def run_instance(
     process.start()
 
     # TODO add a safe guard to avoid infinite loop
-    while not model_result["ready"]:
+
+    time_start = time.time()
+    while not model_result["ready"] and time.time() - time_start < 300:
         # print(f"waiting for model to be ready {datetime.datetime.now().strftime('%H:%M:%S')}")
         pass
 

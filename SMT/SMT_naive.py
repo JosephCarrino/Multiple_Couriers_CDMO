@@ -241,33 +241,20 @@ def multiple_couriers(
 def calculate_bound_package(m: int, n: int, l: list[int], s: list[int]) -> (int, int):
     """
     Function for calculating bounds for the number of packages carriable by each courier
-    It works considering the range of carriable weights and the range of packages weights
-    Then a delta is computed considering the total carriable weight
     :param m: Number of couriers
     :param n: Number of packages
     :param l: List of carriable weight by each courier
     :param s: List of weights of the packages
     :return: General upper and lower bound
     """
-    weight_sum = sum(s)
-    capacity_min = min(l)
-
-    capacity_max = max(l)
     weight_max = max(s)
 
-    max_package = capacity_max // weight_max
-    min_package = capacity_min // weight_max
+    # Not able is the number of courier that are not able
+    # to transport the CORRECT package
+    not_able = len([cap for cap in l if cap < weight_max])
 
-    upper_bound = min(n, math.ceil(n / m))
-    lower_bound = max(0, math.floor(n / m))
-
-    if capacity_min >= weight_sum:
-        delta = 0
-    else:
-        delta = max_package - min_package
-
-    upper_bound = min(n, upper_bound + delta)
-    lower_bound = max(0, lower_bound - delta)
+    upper_bound = n - m + not_able
+    lower_bound = 1 if not_able == 0 else 0
 
     return upper_bound, lower_bound
 
