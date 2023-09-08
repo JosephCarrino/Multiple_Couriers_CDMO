@@ -229,12 +229,6 @@ def multiple_couriers(
     while iterations < MAXITER:
         # weight = 0.5  # + (0.2 * math.exp(-0.2 * iter))
 
-
-        print(f"{min_distance=} {max_distance=}")
-
-        print(f"non casted {(min_distance + max_distance) / 2}")
-        print(f"casted {int((min_distance + max_distance) / 2)}")
-
         k = int((min_distance + max_distance) / 2)#int(((1 - weight) * min_distance + weight * max_distance))
 
         solver.push()
