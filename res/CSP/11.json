@@ -3,48 +3,24 @@
         "time": 300,
         "optimal": null,
         "obj": 0,
-        "sol": [
-            [],
-            [],
-            [],
-            [],
-            []
-        ]
+        "sol": []
     },
     "DomDegMinCSP": {
         "time": 300,
         "optimal": null,
         "obj": 0,
-        "sol": [
-            [],
-            [],
-            [],
-            [],
-            []
-        ]
+        "sol": []
     },
     "DomDegRandCSP": {
         "time": 300,
         "optimal": null,
         "obj": 0,
-        "sol": [
-            [],
-            [],
-            [],
-            [],
-            []
-        ]
+        "sol": []
     },
     "CSPnoSB": {
         "time": 300,
         "optimal": null,
         "obj": 0,
-        "sol": [
-            [],
-            [],
-            [],
-            [],
-            []
-        ]
+        "sol": []
     }
 }

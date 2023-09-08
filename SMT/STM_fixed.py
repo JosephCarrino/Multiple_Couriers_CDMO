@@ -227,10 +227,15 @@ def multiple_couriers(
     iterations = 1
     last_best_sol = None
     while iterations < MAXITER:
+        # weight = 0.5  # + (0.2 * math.exp(-0.2 * iter))
 
-        weight = 0.5  # + (0.2 * math.exp(-0.2 * iter))
 
-        k = int(((1 - weight) * min_distance + weight * max_distance))
+        print(f"{min_distance=} {max_distance=}")
+
+        print(f"non casted {(min_distance + max_distance) / 2}")
+        print(f"casted {int((min_distance + max_distance) / 2)}")
+
+        k = int((min_distance + max_distance) / 2)#int(((1 - weight) * min_distance + weight * max_distance))
 
         solver.push()
         solver.add(objective_value <= k)
@@ -241,8 +246,8 @@ def multiple_couriers(
         if sol != sat:
             min_distance = k
         else:
-            max_distance = k
             last_best_sol = solver.model()
+            max_distance = last_best_sol.eval(objective_value).as_long()
 
             # Building solution matrix and store the intermediate solution
             last_solution_matrix = [[0 for _ in range(last_time + 1)] for _ in range(len(courier_range))]

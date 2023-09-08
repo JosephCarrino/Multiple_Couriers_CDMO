@@ -213,8 +213,8 @@ def multiple_couriers(
         if sol != sat:
             min_distance = k
         else:
-            max_distance = k
             last_best_sol = solver.model()
+            max_distance = last_best_sol.eval(objective_value).as_long()
 
             # Building solution matrix and store the intermediate solution
             last_solution_matrix = [[0 for _ in range(last_time + 1)] for _ in range(len(courier_range))]

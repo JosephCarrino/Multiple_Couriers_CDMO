@@ -297,7 +297,7 @@ def multiple_couriers(
         if sol != sat:
             min_distance = k
         else:
-            max_distance = k
+            # max_distance = k
             last_best_model = solver.model()
 
             # Build the solution matrix and store the intermediate solution
@@ -306,6 +306,22 @@ def multiple_couriers(
             for package, _time, courier in variable_coordinates:
                 if last_best_model[y[courier][_time][package]]:
                     last_solution_matrix[courier][_time] = package + 1
+
+            dd = []
+            for courier in courier_range:
+                s = 0
+                for t in time_range_no_zero:
+                    p_1 = last_solution_matrix[courier][t - 1] - 1
+                    p_2 = last_solution_matrix[courier][t] - 1
+                    s += D[p_1][p_2]
+
+                dd += [s]
+
+            max_distance = max(dd)
+            #
+            # for courier in courier_range]
+            # print(last_solution_matrix)
+
 
             model_result["sol"] = last_solution_matrix
             model_result["time"] = time() - start_time

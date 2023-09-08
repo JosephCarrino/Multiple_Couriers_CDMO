@@ -131,6 +131,10 @@ def solve_multiple_couriers(
                 model += path_increment[courier][p2] >= path_increment[courier][p1] + 1 - n * (1 - y[courier][p1][p2])
                 model += path_increment[courier][p2] <= path_increment[courier][p1] + 1 + n * (1 - y[courier][p1][p2])
 
+    for courier in courier_range:
+        for p in package_range:
+            model += path_increment[courier][p] <= xsum([y[courier][p][p2] for p2 in package_range]) * (n + 1)
+
     ### Optimization ###
 
     for courier in courier_range:
@@ -178,7 +182,7 @@ def solve_multiple_couriers(
     model.optimize(max_seconds=timeout)
 
     # Build the solution
-    solution = [[base_package
+    solution = [[base_package + 1
                  for _ in time_range]
                 for _ in courier_range]
 
@@ -189,8 +193,9 @@ def solve_multiple_couriers(
             except:
                 z_value = 0
 
+            # print(f"Courier {courier}, package {p1 + 1}, z = {z_value}")
             if z_value != 0:
-                solution[courier][z_value] = p1
+                solution[courier][z_value] = p1 + 1
 
     model_result["sol"] = solution
     model_result["time"] = time() - start_time

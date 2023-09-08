@@ -54,10 +54,15 @@ def clean_result(model_result: dict) -> dict:
         # TODO doesn't work if the timeout change
         "optimal": model_result["optimal"],
         "obj": int(model_result["min_dist"]) if model_result["min_dist"] else 0,
-        "sol": model_result["sol"] if model_result["sol"] else "Unsat",
+        "sol": model_result["sol"] if model_result["sol"] else [],
     }
-    # Remove element referring to the base node
-    results["sol"] = [[elem for elem in courier_elems if elem != courier_elems[0]] for courier_elems in results["sol"]]
+
+    if results["sol"] == []:
+        results["sol"] = []
+    else:
+        # Remove element referring to the base node
+        results["sol"] = [[elem for elem in courier_elems if elem != courier_elems[0]] for courier_elems in
+                          results["sol"]]
 
     return results
 
@@ -114,7 +119,7 @@ def run_instance(
         print(f"---Completed instance n°{instance_index} at {datetime.datetime.now().strftime('%H:%M:%S')} -- timeout")
     else:
         print(f"---Completed instance n°{instance_index} at {datetime.datetime.now().strftime('%H:%M:%S')}")
-
+    # print(model_result)
     result = clean_result(model_result)
 
     return result

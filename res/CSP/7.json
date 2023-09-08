@@ -74,24 +74,12 @@
         "time": 300,
         "optimal": null,
         "obj": 0,
-        "sol": [
-            [],
-            [],
-            [],
-            [],
-            []
-        ]
+        "sol": []
     },
     "CSPnoSB": {
         "time": 300,
         "optimal": null,
         "obj": 0,
-        "sol": [
-            [],
-            [],
-            [],
-            [],
-            []
-        ]
+        "sol": []
     }
 }
